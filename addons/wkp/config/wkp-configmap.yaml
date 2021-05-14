@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wkp-configuration
+data:
+  cluster_name: tenant01
+  ssh-config:
+    Host *
+    StrictHostKeyChecking no
+  weaveworks.entitlements: |
+    AAEAAQAAAL14/4EDAQEMRW50aXRsZW1lbnRzAf+CAAEHAQpDdXN0b21lcklEAQwAAQhDdXN0b21lcgEMAAEKRGVwYXJ0bWVudAEMAAELRGVzY3JpcHRpb24BDAABBU5vZGVzAQQAAQhWZXJzaW9ucwEMAAEGQWRkb25zAf+EAAAAFv+DAgEBCFtdc3RyaW5nAf+EAAEMAAAs/4IBGzE5Q2F0bDFSUWdoQzM1N0ZOdmpqSDk3YzM4VQEKV2VhdmV3b3JrcwAAAgABAAACAC1/48qKpSOQ8zubMgNb9dVb+FvKx0Z7x1Wqu0xdts1H1lE9Hmhxp/dKH0qVfHjDiTTNCgD+UNvQvj54x5b7/JovwoyKJDCKoE1P/Tiz9OVwR9VB3Yorz16vse+BJvoh4xWWDo1mteVMmOtTizNIDXfMjz8LbTfQavvVIwW3aspFrU640iZDFpnQJ3aXc3cmNmgPN++9E413uMqrNDcjyWOBsl4xYq1qcKEdJ401mzmfdvDoWM3rnR4CoZbTovvWdm+fA+deeEHrdqjTfzHnyTtlR5wE3w5/W9rSXnQX9fvNm2CpRAOs+OgspOlh5t2w33X7MjAc0UbYUCiqZUaD2CmCj6LSBpJ3FiwmqWFVyOK5sgUoH15RL/T5PhRnge9C/IYkUrCWMaV3BHwekSWF8KESRcQ8V1pidPsu3FMuO0vmfshZtIgnAIqPgCESfRcnH5Io5fV0uoV2661CZPKCfP2BEDsnnne+XI9V0Utm2xBfIUO+MH1lVocBjwxNBSnA6Zz19xS5Nc9UEE/SCJAUmlhiFTwAKz+GECwibRRe5QkAwiPy3riru1qI/Iz00+AEXseqWeZqHU4VChvJgzHhSypY2xDTZgQtKzj5XiDyN+GIni/WNAaB/BqVWLOdfUy0I5knVP/jh7u+AaHkBLAAjN+7Oc3SQfTnIq7cKV5ZcZ+p
+  wkp-setup-config: |
+    track: wks-components
+    clusterName: tenant01.yaml
+    gitProvider: github
+    gitProviderOrg: wkp-capi-demo
+    # gitUrl: git@github.com:wkp-capi-demo/platform-cluster-management.git
+    dockerIOUser: casibbald
+    # The following configuration item can only be in this location.
+    dockerIOPasswordFile: /dockerhub.password/dockerhub.password
+    # Can be used to set your own sealed secrets
+    sealedSecretsCertificate: ''
+    sealedSecretsPrivateKey: ''
+    enabledFeatures:
+      teamWorkspaces: true
+    eksConfig:
+      clusterRegion:eu-north-1
+      uiALBIngress: true

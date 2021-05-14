@@ -1,0 +1,15 @@
+apiVersion: addons.cluster.x-k8s.io/v1alpha3
+kind: ClusterResourceSet
+metadata:
+ name: crs-calico
+ namespace: tenants
+spec:
+ strategy: "ApplyOnce"
+ clusterSelector:
+   matchLabels:
+     cni: "calico"
+ resources:
+   - name: calico-addon
+     kind: ConfigMap
+  #  - name: db-secret  # Add the AWS creds or use IRSA
+  #    kind: Secret

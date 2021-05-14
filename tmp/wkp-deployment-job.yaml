@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wkp-deployment-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: wkp-components
+          image: docker.io/weaveworks/wks-components-track-preview:0.0.25
+          volumeMounts:
+            - name: kubeconfig
+              mountPath: /kubeconfig
+            - name: wkpconfig
+              mountPath: /wkpconfig
+            - name: wkp-ssh-key
+              mountPath: /ssh-key
+            - name: netrc
+              mountPath: /netrc
+            - name: dockerhub-password
+              mountPath: /dockerhub.password
+          command: ["/bin/bash"]
+          args:
+          - -c
+          - /wkp-install.sh
+          env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: GITHUB_TOKEN
+            - name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: wkp-configuration
+                  key: cluster_name
+      restartPolicy: Never
+      volumes:
+        - name: kubeconfig
+          secret:
+            secretName: tenant01-kubeconfig
+        - name: wkp-ssh-key
+          secret:
+            secretName: wkp-ssh-key
+        - name: netrc
+          secret:
+            secretName: netrc
+        - name: dockerhub-password
+          secret:
+            secretName: dockerhub-password
+        - name: wkpconfig
+          configMap:
+            name: wkp-configuration
+            items:
+              - key: weaveworks.entitlements
+                path: weaveworks.entitlements-enc
+              - key: wkp-setup-config
+                path: config.yaml
+              - key: ssh-config
+                path: ssh-config
+  backoffLimit: 4

@@ -1,0 +1,13 @@
+apiVersion: addons.cluster.x-k8s.io/v1alpha3
+kind: ClusterResourceSet
+metadata:
+ name: crs-nvidia
+ namespace: tenants
+spec:
+ strategy: "ApplyOnce"
+ clusterSelector:
+   matchLabels:
+     gpu: "nvidia"
+ resources:
+   - name: nvidia-addon
+     kind: ConfigMap

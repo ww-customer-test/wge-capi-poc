@@ -1,0 +1,76 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: self
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./clusters/bootstrap
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  validation: client
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: capa-fix
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./addons/capa-patch
+  prune: true
+  validation: client
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: account-one-eks-account
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./addons/eks-accounts/account-one
+  prune: true
+  validation: client
+  dependsOn:
+    - name: capa-fix
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: eks-account-secrets
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./cluster-specs/bootstrap/eks-accounts
+  prune: true
+  validation: client
+  dependsOn:
+    - name: account-one-eks-account
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: eks-mgmt
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./cluster-specs/bootstrap/eks-mgmt
+  prune: true
+  validation: client
+  dependsOn:
+    - name: eks-account-secrets

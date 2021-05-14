@@ -1,0 +1,25 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: podinfo-tenant01
+  namespace: tenants
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+        namespace: tenants
+  interval: 1m
+  targetNamespace: default
+  storageNamespace: default
+  kubeConfig:
+    secretRef:
+      name: tenant01-kubeconfig
+  install:
+    remediation:
+      retries: 3
+  # values:
+  #   service:
+  #     grpcService: backend

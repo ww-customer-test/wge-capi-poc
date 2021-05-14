@@ -1,0 +1,61 @@
+track: wks-components
+
+# Name of the cluster being created.
+# If no `gitUrl` value (below) is provided, the `clusterName` will be the name
+# of the repo created by WKP (together with the `gitProviderOrg` value below)
+#
+# If left blank, defaults to: `wk-${USER}`
+# Value must be 1-100 characters matching the pattern:
+#   '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'
+clusterName: 'mgmt01'
+
+
+# Providing a `gitUrl` will bypass automatic repo creation
+# (and thereby bypass the `gitProviderOrg` value above).
+#
+# If you already have a remote git repo with configured ssh keys, used this value.
+#
+# !IMPORTANT! only ssh git urls are supported:
+# e.g. `git@git.acme.com:app-team/dev-cluster.git`
+gitUrl: 'git@github.com:ww-customer-test/wkp-components.git'
+
+# Name of docker hub user for fetching images
+# [REQUIRED]
+dockerIOUser: 'pcarlton'
+
+# Path to a file containing password for docker hub user account
+# [REQUIRED]
+dockerIOPasswordFile: '/home/paul/.wks/dockerhub-password'
+
+# Path to a certificate used to encrypt sealed secrets.
+# If left blank a self signed certificate will be created.
+# Provide absolute path or relative from the directory of this config.yaml file
+sealedSecretsCertificate: ''
+
+# Path to a private key used to decrypt sealed secrets.
+# If left blank a new private key will be created.
+# Provide absolute path or relative from the directory of this config.yaml file
+sealedSecretsPrivateKey: ''
+
+# Map with WKP features that are enabled in the cluster.
+# To apply changes made here, commit and push the
+# updated config.yaml file to the cluster repository.
+enabledFeatures:
+  teamWorkspaces: true
+  fleetManagement: true
+
+# Storage configuration for the fleet management database
+# Supported databases: `sqlite`, `postgres`
+fleetManagementDB:
+  databaseType: sqlite
+  databaseURI: '/var/database/mccp.db'
+  # Applies only if databaseType = sqlite
+  sqliteConfig:
+    hostPathVolume: true
+    path: '/home/wks/database'
+    persistentVolumeClaim: false
+  # Applies only if databaseType = postgres
+  # To provide a user and password, refer to our user-guide at
+  # the MCCP Database Configuration page.
+  postgresConfig:
+    databaseName: postgres

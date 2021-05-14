@@ -1,0 +1,69 @@
+---
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: Cluster
+metadata:
+  name: "tenant02"
+  namespace: "tenants"
+  labels:
+    cni: "calico"
+    gpu: "nvidia"
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    kind: AWSManagedCluster
+    name: "tenant02"
+  controlPlaneRef:
+    kind: AWSManagedControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    name: "tenant02-control-plane"
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: AWSManagedCluster
+metadata:
+  name: "tenant02"
+  namespace: "tenants"
+---
+kind: AWSManagedControlPlane
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+metadata:
+  name: "tenant02-control-plane"
+  namespace: "tenants"
+spec:
+  region: "eu-west-1"
+  sshKeyName: "capi-management"
+  version: "v1.18.0"
+  addons:
+    - name: "vpc-cni"
+      version: "v1.6.3-eksbuild.1"
+      conflictResolution: "overwrite"
+  identityRef:
+    kind: AWSClusterStaticIdentity
+    name: account-two-account
+---
+apiVersion: exp.cluster.x-k8s.io/v1alpha3
+kind: MachinePool
+metadata:
+  name: "tenant02-pool-0"
+  namespace: "tenants"
+spec:
+  clusterName: "tenant02"
+  replicas: 2
+  template:
+    spec:
+      clusterName: "tenant02"
+      bootstrap:
+        dataSecretName: ""
+      infrastructureRef:
+        name: "tenant02-pool-0"
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+        kind: AWSManagedMachinePool
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: AWSManagedMachinePool
+metadata:
+  name: "tenant02-pool-0"
+  namespace: "tenants"
+spec: {}

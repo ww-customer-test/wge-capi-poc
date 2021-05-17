@@ -43,6 +43,7 @@ if [ ! -d setup ] ; then
   wk setup install
 fi
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
+  git branch --set-upstream-to=origin/master master
   git pull
   rm -rf *
   git add -A; git commit -a -m "reset for reinstall"; git push -f

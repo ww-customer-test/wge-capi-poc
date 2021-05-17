@@ -8,7 +8,7 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <path>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>]"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
     echo "This script will setup wkp on a cluster"
@@ -34,11 +34,6 @@ function args() {
     esac
     (( arg_index+=1 ))
   done
-  path="${arg_list[*]:$arg_index:$(( arg_count - arg_index + 1))}"
-  if [ -z "${path:-}" ] ; then
-      usage
-      exit 1
-  fi
 }
 
 args "$@"

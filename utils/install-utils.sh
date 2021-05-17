@@ -60,4 +60,8 @@ brew install flux
 sudo curl -s -L  https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq && \
 sudo chmod +x /usr/local/bin/yq
 
+curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator
+chmod +x ./aws-iam-authenticator
+sudo mv aws-iam-authenticator /usr/local/bin
+
 brew install kubeseal

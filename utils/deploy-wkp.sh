@@ -39,7 +39,9 @@ function args() {
 args "$@"
 
 pushd ../wkp-components
-wk setup install
+if [ ! -d setup ] ; then
+  wk setup install
+fi
 cp ~/config.yaml setup
 wk setup run
 popd

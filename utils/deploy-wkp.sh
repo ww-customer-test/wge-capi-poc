@@ -42,6 +42,12 @@ pushd ../wkp-components
 if [ ! -d setup ] ; then
   wk setup install
 fi
+if [ -e cluster/platform/gitops-secrets.yaml ] ; then
+  git pull
+  rm -rf *
+  git add -A; git commit -a "reset for reinstall"; git push
+  wk setup install
+fi
 cp ~/config.yaml setup
 export WKP_DEBUG=true
 wk setup run -v

@@ -49,6 +49,7 @@ flux bootstrap github \
   --owner=${GITHUB_ORG} \
   --repository=${GITHUB_REPO} \
   --branch=main \
-  --path=${path}
+  --path=${path} \
+  --token-auth
 
 git pull

@@ -170,7 +170,7 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
     ./utils/deploy-flux.sh ${debug} cluster-specs/bootstrap/flux
     ./utils/deploy-kubeseal.sh ${debug} clusters/bootstrap
     ./utils/kubeseal-aws-account.sh ${debug} --key-file clusters/bootstrap/pub-sealed-secrets.pem --aws-account-name account-one cluster-specs/bootstrap/eks-accounts/account-one-secret.yaml
-   git add -A;git commit -a -m "kubeseal setup for bootstrap cluster"; git push
+    git add -A;git commit -a -m "kubeseal setup for bootstrap cluster"; git push
 
     kubectl apply -f clusters/bootstrap/self.yaml
 

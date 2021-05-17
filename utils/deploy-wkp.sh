@@ -38,7 +38,7 @@ function args() {
 
 args "$@"
 
-pushd /home/paul/wkp-components
+pushd ../wkp-components
 wk setup install
 cp ~/config.yaml setup
 wk setup run

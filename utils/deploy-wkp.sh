@@ -43,5 +43,6 @@ if [ ! -d setup ] ; then
   wk setup install
 fi
 cp ~/config.yaml setup
-wk setup run
+export WKP_DEBUG=true
+wk setup run -v
 popd

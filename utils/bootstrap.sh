@@ -190,7 +190,7 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
     echo ""
     echo "Setup CAPI in management cluster: $CLUSTER_NAME"
     kubectl ${namespace_setting} get secret $CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/mgmt.kubeconfig
-    if [ -z "$(kubectl --kubeconfig ~/mgmt.kubeconfig get ns capi-system)" ] ; then
+    if [ -z "$(kubectl --kubeconfig ~/mgmt.kubeconfig get ns capi-system 2>/dev/null)" ] ; then
         clusterctl init  --kubeconfig ~/mgmt.kubeconfig -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
     fi
     kubectl wait --kubeconfig ~/mgmt.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
@@ -217,7 +217,7 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
 fi
 export KUBECONFIG=${CREDS_DIR}/mgmt.kubeconfig
 
-utils/deploy-wkp.sh
+utils/deploy-wkp.sh ${debug}
 
 exit
 

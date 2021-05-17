@@ -43,7 +43,7 @@ if [ ! -d setup ] ; then
   wk setup install
 fi
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
-  git branch --set-upstream-to=origin/master master
+  git branch --set-upstream-to=origin/main main
   git pull
   rm -rf * .flux.yaml
   git add -A; git commit -a -m "reset for reinstall"; git push -f

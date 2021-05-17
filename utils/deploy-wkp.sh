@@ -45,7 +45,7 @@ fi
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
   git pull
   rm -rf *
-  git add -A; git commit -a -m "reset for reinstall"; git push
+  git add -A; git commit -a -m "reset for reinstall"; git push -f
   wk setup install
 fi
 cp ~/config.yaml setup

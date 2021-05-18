@@ -1,18 +1,14 @@
 #!/bin/bash
 
-# Utility for deploying wkp components on an existing cluster
+# Utility for doing or redoing wkp setup
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
-set -euo pipefail
-
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <path>"
-    echo "optional use --kubeconfig option to specify kubeconfig file"
+    echo "usage ${0} [--debug]"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
-    echo "This script will setup wkp on a cluster, use <path> to specify the directory to use"
-    echo "if the directory does not exist it will be created"
+    echo "This script will setup wkp in directory"
 }
 
 function args() {
@@ -22,7 +18,6 @@ function args() {
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
-          "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
           "--debug") set -x;;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -39,24 +34,15 @@ function args() {
 
 args "$@"
 
-set +e
-wkp-installed.sh
+wk setup install << EOF > /tmp/wkp-setup.txt
+
+EOF
+
 if [ "$?" == "0" ] ; then
-    echo "wkp installed on cluster"
     exit 0
 fi
-set -e
 
-pushd ${path}
-wkp-setup.sh
-if [ -e cluster/platform/gitops-secrets.yaml ] ; then
-  rm -rf * .flux.yaml .gitignore
-  utils/remove-kubeseal.sh
-  utils/remove-flux1.sh
-  wkp-setup.sh
+grep "Found existing config.yaml and/or gitops-params.yaml file" /tmp/wkp-setup.txt
+if [ "$?" == "0" ] ; then
+    echo "Already setup"
 fi
-
-cp ~/config.yaml setup
-export WKP_DEBUG=true
-wk setup run -v
-popd

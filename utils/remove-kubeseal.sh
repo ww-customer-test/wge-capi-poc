@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Utility for deploying wkp components on an existing cluster
+# Utility for removing sealed secret controller from a cluster
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
@@ -8,11 +8,10 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <path>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>]"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
-    echo "This script will setup wkp on a cluster, use <path> to specify the directory to use"
-    echo "if the directory does not exist it will be created"
+    echo "This script will remove the sealed secret controller from a cluster"
 }
 
 function args() {
@@ -39,24 +38,12 @@ function args() {
 
 args "$@"
 
-set +e
-wkp-installed.sh
-if [ "$?" == "0" ] ; then
-    echo "wkp installed on cluster"
-    exit 0
-fi
-set -e
+kubectl -n kube-system delete deployments.apps sealed-secrets-controller
+kubectl -n kube-system delete service sealed-secrets-controller
+kubectl -n kube-system delete sa sealed-secrets-controller
 
-pushd ${path}
-wkp-setup.sh
-if [ -e cluster/platform/gitops-secrets.yaml ] ; then
-  rm -rf * .flux.yaml .gitignore
-  utils/remove-kubeseal.sh
-  utils/remove-flux1.sh
-  wkp-setup.sh
-fi
+for secret in $(kubectl -n kube-system get secret | grep sealed | awk '{print $1}'); do kubectl -n kube-system delete secret $secret;done
+for secret in $(kubectl -n kube-system get role | grep sealed | awk '{print $1}'); do kubectl -n kube-system delete role $secret;done
+for secret in $(kubectl -n kube-system get rolebinding | grep sealed | awk '{print $1}'); do kubectl -n kube-system delete rolebinding $secret;done
+for secret in $(kubectl  get clusterrolebinding | grep sealed | awk '{print $1}'); do kubectl delete clusterrolebinding $secret;done
 
-cp ~/config.yaml setup
-export WKP_DEBUG=true
-wk setup run -v
-popd

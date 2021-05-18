@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Utility for deploying wkp components on an existing cluster
+# Utility for removing wkp flux1 from a cluster
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
@@ -8,11 +8,10 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <path>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>]"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
-    echo "This script will setup wkp on a cluster, use <path> to specify the directory to use"
-    echo "if the directory does not exist it will be created"
+    echo "This script will remove the sealed secret controller from a cluster"
 }
 
 function args() {
@@ -39,24 +38,11 @@ function args() {
 
 args "$@"
 
-set +e
-wkp-installed.sh
-if [ "$?" == "0" ] ; then
-    echo "wkp installed on cluster"
-    exit 0
-fi
-set -e
+kubectl -n wkp-flux delete deployments.apps memcached
+kubectl -n wkp-flux delete deployments.apps flux
+kubectl -n wkp-flux delete service memcached
+kubectl -n wkp-flux delete sa flux
 
-pushd ${path}
-wkp-setup.sh
-if [ -e cluster/platform/gitops-secrets.yaml ] ; then
-  rm -rf * .flux.yaml .gitignore
-  utils/remove-kubeseal.sh
-  utils/remove-flux1.sh
-  wkp-setup.sh
-fi
-
-cp ~/config.yaml setup
-export WKP_DEBUG=true
-wk setup run -v
-popd
+for secret in $(kubectl -n wkp-flux get secret | awk '{print $1}'); do kubectl -n wkp-flux delete secret $secret;done
+for secret in $(kubectl  get clusterrolebinding | grep flux | awk '{print $1}'); do kubectl delete clusterrolebinding $secret;done
+for secret in $(kubectl  get clusterrole | grep flux | awk '{print $1}'); do kubectl delete clusterrole $secret;done

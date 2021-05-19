@@ -41,7 +41,6 @@ spec:
   region: "eu-west-1"
   sshKeyName: "capi-management"
   version: "v1.18.0"
-  disableVPCCNI: true
   addons:
   - name: "vpc-cni"
     version: "v1.6.3-eksbuild.1"

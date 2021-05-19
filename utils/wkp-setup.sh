@@ -37,10 +37,17 @@ wk setup install << EOF > /tmp/wkp-setup.txt
 EOF
 
 if [ "$?" == "0" ] ; then
+    echo "wkp setup install executed"
     exit 0
 fi
 
 grep "Found existing config.yaml and/or gitops-params.yaml file" /tmp/wkp-setup.txt
 if [ "$?" == "0" ] ; then
     echo "Already setup"
+    rm -rf /tmp/wkp-bin
+    mkdir -p /tmp/wkp-bin
+    pushd /tmp/wkp-bin
+    wk setup install
+    popd
+    cp -rf /tmp/wkp-bin/bin .
 fi

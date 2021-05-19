@@ -38,10 +38,15 @@ function args() {
 
 args "$@"
 
-if [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | grep memcached | awk '{print $1}')" == "memcached" ] ; then
+if [ "$(kubectl -n kube-system get deployments.apps 2>/dev/null | grep sealed-secrets-controller | awk '{print $1}')" == "sealed-secrets-controller" ] ; then
   kubectl -n kube-system delete deployments.apps sealed-secrets-controller
-kubectl -n kube-system delete service sealed-secrets-controller
-kubectl -n kube-system delete sa sealed-secrets-controller
+fi
+if [ "$(kubectl -n kube-system get services 2>/dev/null | grep sealed-secrets-controller | awk '{print $1}')" == "sealed-secrets-controller" ] ; then
+  kubectl -n kube-system delete service sealed-secrets-controller
+fi
+if [ "$(kubectl -n kube-system get sa 2>/dev/null | grep sealed-secrets-controller | awk '{print $1}')" == "sealed-secrets-controller" ] ; then
+  kubectl -n kube-system delete sa sealed-secrets-controller
+fi
 
 for secret in $(kubectl -n kube-system get secret | grep sealed | awk '{print $1}'); do kubectl -n kube-system delete secret $secret;done
 for secret in $(kubectl -n kube-system get role | grep sealed | awk '{print $1}'); do kubectl -n kube-system delete role $secret;done

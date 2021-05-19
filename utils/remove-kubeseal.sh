@@ -38,7 +38,8 @@ function args() {
 
 args "$@"
 
-kubectl -n kube-system delete deployments.apps sealed-secrets-controller
+if [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | grep memcached | awk '{print $1}')" == "memcached" ] ; then
+  kubectl -n kube-system delete deployments.apps sealed-secrets-controller
 kubectl -n kube-system delete service sealed-secrets-controller
 kubectl -n kube-system delete sa sealed-secrets-controller
 

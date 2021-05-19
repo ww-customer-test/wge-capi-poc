@@ -51,8 +51,8 @@ pushd ${path}
 wkp-setup.sh
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
   rm -rf * .flux.yaml .gitignore
-  utils/remove-kubeseal.sh
-  utils/remove-flux1.sh
+  remove-wkp-kubeseal.sh
+  remove-wkp-flux1.sh
   wkp-setup.sh
 fi
 

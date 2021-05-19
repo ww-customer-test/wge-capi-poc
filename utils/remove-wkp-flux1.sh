@@ -38,11 +38,19 @@ function args() {
 
 args "$@"
 
-kubectl -n wkp-flux delete deployments.apps memcached
-kubectl -n wkp-flux delete deployments.apps flux
-kubectl -n wkp-flux delete service memcached
-kubectl -n wkp-flux delete sa flux
+if [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | grep memcached | awk '{print $1}')" == "memcached" ] ; then
+  kubectl -n wkp-flux delete deployments.apps memcached
+fi
+if [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | grep flux | awk '{print $1}')" == "flux" ] ; then
+  kubectl -n wkp-flux delete deployments.apps flux
+fi
+if [ "$(kubectl -n wkp-flux get services 2>/dev/null | grep memcached | awk '{print $1}')" == "memcached" ] ; then
+  kubectl -n wkp-flux delete service memcached
+fi
+if [ "$(kubectl -n wkp-flux get sa 2>/dev/null | grep flux | awk '{print $1}')" == "flux" ] ; then
+  kubectl -n wkp-flux delete sa flux
+fi
 
-for secret in $(kubectl -n wkp-flux get secret | awk '{print $1}'); do kubectl -n wkp-flux delete secret $secret;done
+for secret in $(kubectl -n wkp-flux get secret | grep flux | awk '{print $1}'); do kubectl -n wkp-flux delete secret $secret;done
 for secret in $(kubectl  get clusterrolebinding | grep flux | awk '{print $1}'); do kubectl delete clusterrolebinding $secret;done
 for secret in $(kubectl  get clusterrole | grep flux | awk '{print $1}'); do kubectl delete clusterrole $secret;done

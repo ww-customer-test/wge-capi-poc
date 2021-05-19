@@ -1,21 +1,27 @@
 #!/bin/bash
 
-# Utility for doing or redoing wkp setup
+# Utility for checking wkp is installed
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
+set -euo pipefail
+
 function usage()
 {
-    echo "usage ${0} [--debug]"
-    echo "This script will setup wkp in directory"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>]"
+    echo "optional use --kubeconfig option to specify kubeconfig file"
+    echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
+    echo "This script will check if wkp is installed on a cluster"
 }
 
 function args() {
+  kubeconfig_path=${KUBECONFIG:-$HOME/.kube/config}
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
+          "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
           "--debug") set -x;;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -32,15 +38,6 @@ function args() {
 
 args "$@"
 
-wk setup install << EOF > /tmp/wkp-setup.txt
+kubectl wait --for=condition=Available --timeout=2m -n wkp-flux deployments.apps flux
+# Add other components
 
-EOF
-
-if [ "$?" == "0" ] ; then
-    exit 0
-fi
-
-grep "Found existing config.yaml and/or gitops-params.yaml file" /tmp/wkp-setup.txt
-if [ "$?" == "0" ] ; then
-    echo "Already setup"
-fi

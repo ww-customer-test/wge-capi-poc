@@ -11,6 +11,8 @@ kind: Cluster
 metadata:
   name: "mgmt01"
   namespace: "mgmt"
+  labels:
+    cni: "calico"
 spec:
   clusterNetwork:
     pods:
@@ -39,10 +41,7 @@ spec:
   region: "eu-west-1"
   sshKeyName: "capi-management"
   version: "v1.18.0"
-  addons:
-    - name: "vpc-cni"
-      version: "v1.6.3-eksbuild.1"
-      conflictResolution: "overwrite"
+  disableVPCCNI: true
   identityRef:
     kind: AWSClusterStaticIdentity
     name: account-one-account
@@ -54,7 +53,7 @@ metadata:
   namespace: "mgmt"
 spec:
   clusterName: "mgmt01"
-  replicas: 2
+  replicas: 4
   template:
     spec:
       clusterName: "mgmt01"
@@ -70,4 +69,7 @@ kind: AWSManagedMachinePool
 metadata:
   name: "mgmt01-pool-0"
   namespace: "mgmt"
-spec: {}
+spec:
+  scaling:
+    minSize: 4
+    maxSize: 5

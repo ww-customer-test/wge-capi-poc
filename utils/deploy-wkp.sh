@@ -61,7 +61,7 @@ if [ "$?" == "0" ] ; then
 fi
 set -e
 
-cur_dir=$PWD
+script_dir=$(dirname ${BASH_SOURCE[0]})
 pushd ${dir_name}
 
 if [ -z "$(git remote | grep origin)" ] ; then
@@ -83,7 +83,10 @@ if [ -e cluster/platform/gitops-secrets.yaml ] ; then
 fi
 
 sed s#GIT_URL#${git_url}# ~/config.yaml > setup/config.yaml
-cp ${cur_dir}/addons/wkp/setup.sh setup
+cp ${script_dir}/../addons/wkp/setup.sh setup
 export WKP_DEBUG=true
+export TRACE_SETUP=y
+export GITURL_ORG="$(echo "${git_url}" | cut -f2 -d: | cut -f1 -d/)"
+export GITURL_REPO="${dir_name}"
 wk setup run -v
 popd

@@ -99,14 +99,14 @@ git_commit_if_changed "Save wk binary version" "${VERSION_PATH}"
 # Create deploy key for a new git repo and create the remote repo
 # If repo key already exists, skip remote repo creation
 GIT_DEPLOY_KEY="${SCRIPT_DIR}/repo-key-${CLUSTER_NAME}"
-if [ -n "${GIT_URL-}" ]; then
+if [ -n "${GIT_URL:-}" ]; then
     if [ ! -e "${GIT_DEPLOY_KEY}" ]; then
         echo "No deploy key found at ${GIT_DEPLOY_KEY}" >&2
         echo "Generating with:" >&2
         echo "  ssh-keygen -q -t rsa -b 4096 -C wk@weave.works -f ${GIT_DEPLOY_KEY} -N \"\"" >&2
         ssh-keygen -q -t rsa -b 4096 -C wk@weave.works -f "${GIT_DEPLOY_KEY}" -N ""
 
-        deploy-key.sh ${GIT_DEPLOY_KEY}.pub
+        deploy-key.sh --debug ${GIT_DEPLOY_KEY}.pub
     fi
 
     git remote rm origin 2>/dev/null || echo "No origin found: OK"

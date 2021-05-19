@@ -41,9 +41,9 @@ function args() {
 args "$@"
 
 
-curl -i -H"Authorization: token $GITHUB_TOKEN" --data @- https://api.github.com/repos/$GITHUB_ORG/$GITHUB_REPO/keys << EOF
+curl -i -H"Authorization: token $GITHUB_TOKEN" --data @- https://api.github.com/repos/$GITURL_ORG/$GITURL_REPO/keys << EOF
 {
-    "title" : "$GITHUB_REPO $(date)",
+    "title" : "$GITURL_REPO $(date)",
     "key" : "$(cat $keyfile)",
     "read_only" : false
 }

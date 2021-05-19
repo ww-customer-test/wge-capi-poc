@@ -217,7 +217,7 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
 fi
 export KUBECONFIG=${CREDS_DIR}/mgmt.kubeconfig
 
-utils/deploy-wkp.sh ${debug}
+utils/deploy-wkp.sh ${debug} 
 
 exit
 

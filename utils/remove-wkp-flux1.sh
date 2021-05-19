@@ -38,6 +38,10 @@ function args() {
 
 args "$@"
 
+if [ "$(kubectl -n wkp-gitops-bootstrap get jobs.batch 2>/dev/null | awk '{print $1}' | grep "^gitops-bootstrap$")" == "gitops-bootstrap" ] ; then
+  kubectl -n wkp-gitops-bootstrap delete jobs.batch gitops-bootstrap
+fi
+
 if [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | grep memcached | awk '{print $1}')" == "memcached" ] ; then
   kubectl -n wkp-flux delete deployments.apps memcached
 fi

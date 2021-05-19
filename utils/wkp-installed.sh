@@ -58,5 +58,3 @@ kubectl wait --for=condition=Available --timeout=2m -n wkp-flux deployments.apps
 sleep $wait
 
 kubectl wait --for=condition=Available --timeout=2m -n wkp-workspaces deployments.apps wkp-workspaces-controller
-
-kubectl wait --for=condition=Available --timeout=2m -n wkp-ui deployments.apps wkp-ui-server

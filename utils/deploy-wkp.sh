@@ -83,5 +83,7 @@ fi
 
 sed s#GIT_URL#${git_url}# ~/config.yaml > setup/config.yaml
 export WKP_DEBUG=true
-wk setup run -v
+wk setup run -v << EOF
+y
+EOF
 popd

@@ -5,6 +5,8 @@ CONTROLPLANE_PROVIDERS=kubeadm:v0.3.12,aws-eks
 KEEP_KIND=false
 debug=""
 
+export PATH=$PATH
+
 set -euo pipefail
 
 for arg in "$@"
@@ -167,9 +169,9 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
-    ./utils/deploy-flux.sh ${debug} cluster-specs/bootstrap/flux
-    ./utils/deploy-kubeseal.sh ${debug} clusters/bootstrap
-    ./utils/kubeseal-aws-account.sh ${debug} --key-file clusters/bootstrap/pub-sealed-secrets.pem --aws-account-name account-one cluster-specs/bootstrap/eks-accounts/account-one-secret.yaml
+    deploy-flux.sh ${debug} cluster-specs/bootstrap/flux
+    deploy-kubeseal.sh ${debug} clusters/bootstrap
+    kubeseal-aws-account.sh ${debug} --key-file clusters/bootstrap/pub-sealed-secrets.pem --aws-account-name account-one cluster-specs/bootstrap/eks-accounts/account-one-secret.yaml
     git add -A;git commit -a -m "kubeseal setup for bootstrap cluster"; git push
 
     kubectl apply -f clusters/bootstrap/self.yaml
@@ -217,12 +219,10 @@ if [ ! -f ${CREDS_DIR}/mgmt.kubeconfig ]; then
 fi
 export KUBECONFIG=${CREDS_DIR}/mgmt.kubeconfig
 
-utils/deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-mgmt01.git
+deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-mgmt01.git
 
-exit
-
-./utils/kubeseal-aws-account.sh ${debug} --key-file clusters/mgmt01/pub-sealed-secrets.pem --aws-account-name account-one cluster-specs/mgmt01/eks-accounts/account-one-secret.yaml
-./utils/kubeseal-aws-account.sh ${debug} --key-file clusters/mgmt01/pub-sealed-secrets.pem --aws-account-name account-two cluster-specs/mgmt01/eks-accounts/account-two-secret.yaml
+kubeseal-aws-account.sh ${debug} --key-file clusters/mgmt01/pub-sealed-secrets.pem --aws-account-name account-one cluster-specs/mgmt01/eks-accounts/account-one-secret.yaml
+kubeseal-aws-account.sh ${debug} --key-file clusters/mgmt01/pub-sealed-secrets.pem --aws-account-name account-two cluster-specs/mgmt01/eks-accounts/account-two-secret.yaml
 
 if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
     git add -A;git commit -a -m "flux and kubeseal setup for eks mgmt01 cluster"; git push
@@ -237,8 +237,8 @@ kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/tenant02
 
 kubectl -n tenants get secret tenant01-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/tenant01.kubeconfig
 export KUBECONFIG=${CREDS_DIR}/tenant01.kubeconfig
-./utils/deploy-flux.sh ${debug} cluster-specs/tenant01/flux
-./utils/deploy-kubeseal.sh ${debug} clusters/tenant01
+deploy-flux.sh ${debug} cluster-specs/tenant01/flux
+deploy-kubeseal.sh ${debug} clusters/tenant01
 
 if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
     git add -A;git commit -a -m "flux and kubeseal setup for eks tenant01 cluster"; git push
@@ -251,8 +251,8 @@ kubectl -n tenants get secret tenant02-user-kubeconfig -o jsonpath={.data.value}
 
 source $CREDS_DIR/account-two.sh
 export KUBECONFIG=${CREDS_DIR}/tenant02.kubeconfig
-./utils/deploy-flux.sh ${debug} cluster-specs/tenant02/flux
-./utils/deploy-kubeseal.sh ${debug} clusters/tenant02
+deploy-flux.sh ${debug} cluster-specs/tenant02/flux
+deploy-kubeseal.sh ${debug} clusters/tenant02
 
 if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
     git add -A;git commit -a -m "flux and kubeseal setup for eks tenant02 cluster"; git push

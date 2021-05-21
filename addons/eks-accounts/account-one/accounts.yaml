@@ -15,4 +15,4 @@ spec:
   allowedNamespaces:
     selector:
       matchLabels:
-        cluster.x-k8s.io/ns: "accounts"
+        cluster.x-k8s.io/ns: "account-one"

@@ -11,6 +11,7 @@ function usage()
     echo "usage ${0} [--debug] <keyfile>"
     echo "<keyfile> is the path to the file containing the public key"
     echo "This script will add deploy key to a github repo"
+    echo "The GITURL_ORG and GITURL_REPO environmental variables are used to specify the repository"
 }
 
 function args() {

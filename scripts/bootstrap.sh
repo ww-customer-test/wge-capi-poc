@@ -245,47 +245,22 @@ deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-mgmt01.git
 ##### 
 exit
 
-kubeseal-aws-account.sh ${debug} --key-file ====wkp_sealed_secret --aws-account-name account-one  ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
-kubeseal-aws-account.sh ${debug} --key-file ====wkp_sealed_secret --aws-account-name account-two  ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
+kubeseal-aws-account.sh ${debug} --key-file #====wkp_sealed_secret=== --aws-account-name account-one  ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
+kubeseal-aws-account.sh ${debug} --key-file #====wkp_sealed_secret=== --aws-account-name account-two  ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
 
 if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
     git add -A;git commit -a -m "flux and kubeseal setup for eks ${MGMT_CLUSTER_NAME} cluster"; git push
 fi
 
-    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-    kubectl apply -f addons/flux/flux-system
-    kubectl apply -f addons/flux/self.yaml
-    kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
+kubectl apply -f addons/flux/flux-system
+kubectl apply -f addons/flux/self.yaml
+kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
-    kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml
+kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml
 
 echo ""
 echo "Waiting for tenant clusters to be ready"
 kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/tenant01
 kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/tenant02
 
-kubectl -n tenants get secret tenant01-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/tenant01.kubeconfig
-export KUBECONFIG=${CREDS_DIR}/tenant01.kubeconfig
-
-deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-tenant01.git
-deploy-flux.sh ${debug} cluster-specs/tenant01/flux
-deploy-kubeseal.sh ${debug} clusters/tenant01
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
-    git add -A;git commit -a -m "flux and kubeseal setup for eks tenant01 cluster"; git push
-fi
-
-kubectl apply -f clusters/tenant01/self.yaml
-
-export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
-kubectl -n tenants get secret tenant02-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/tenant02.kubeconfig
-
-source $CREDS_DIR/account-two.sh
-export KUBECONFIG=${CREDS_DIR}/tenant02.kubeconfig
-deploy-flux.sh ${debug} cluster-specs/tenant02/flux
-deploy-kubeseal.sh ${debug} clusters/tenant02
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
-    git add -A;git commit -a -m "flux and kubeseal setup for eks tenant02 cluster"; git push
-fi
-kubectl apply -f clusters/tenant02/self.yaml

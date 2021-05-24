@@ -40,7 +40,6 @@ function args() {
     esac
     (( arg_index+=1 ))
   done
-  git_url="${arg_list[*]:$arg_index:$(( arg_count - arg_index + 1))}"
   if [ -z "${git_url:-}" ] ; then
       usage
       exit 1
@@ -64,18 +63,6 @@ create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/flux-keys
 deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
 
 mkdir -p ${repo_dir}/manifests
-cat > ${repo_dir}/manifests/cluster-config.yaml << EOF
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cluster-info-addon
-  namespace: kube-system
-data:
-  cluster_repo_url: ${git_url}
-  cluster_name: {cluster_name}
-EOF
-
 cat > ${repo_dir}/manifests/cluster-info.yaml << EOF
 ---
 apiVersion: v1
@@ -85,7 +72,7 @@ metadata:
   namespace: kube-system
 data:
   cluster_repo_url: ${git_url}
-  cluster_name: {cluster_name}
+  cluster_name: ${cluster_name}
 EOF
 
 private_key=$(cat ${keys_dir}/flux-keys | base64 --wrap=0)

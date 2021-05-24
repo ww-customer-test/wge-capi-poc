@@ -48,5 +48,7 @@ function args() {
 
 args "$@"
 
+rm -f ${file_prefix}
+rm -f ${file_prefix}.pub
 ssh-keygen -q -t rsa -b 4096 ${comment_arg} -f "${file_prefix}" -N ""
 

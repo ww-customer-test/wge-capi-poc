@@ -87,7 +87,7 @@ data:
   identity: ${private_key}
 EOF
 
-if git  -C ${repo_dir} diff-index --quiet HEAD manifests ; then
+if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
   git -C ${repo_dir} add manifests
   git -C ${repo_dir} commit -a -m "add cluster config and deploy key to manifest files"
   git -C ${repo_dir} push

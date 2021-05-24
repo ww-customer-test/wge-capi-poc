@@ -8,7 +8,7 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--read-only] --pubkey-file <key-file> --git-url <git-url>"
+    echo "usage ${0} [--debug] [--readonly] --pubkey-file <key-file> --git-url <git-url>"
     echo "<key-file> is the path to the file containing the public key"
     echo "<git-url> is the url of the github repository to add deploy key to"
     echo "This script will add deploy key to a github repo"
@@ -27,7 +27,7 @@ function args() {
           "--pubkey-file") (( arg_index+=1 ));key_file="${arg_list[${arg_index}]}";;
           "--git-url") (( arg_index+=1 ));git_url="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
-          "--read-only") read_only="true";;
+          "--readonly") read_only="true";;
                "-h") usage; exit;;
            "--help") usage; exit;;
                "-?") usage; exit;;

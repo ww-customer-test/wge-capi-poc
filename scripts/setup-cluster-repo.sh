@@ -60,8 +60,8 @@ args "$@"
 repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 git clone ${git_url} ${repo_dir}
 
-create-deploy-key.sh ${debug} --readonly --file-prefix ${keys_dir}/flux-keys --git-url ${git_url}
-deploy-key.sh ${debug} --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
+create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/flux-keys
+deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
 
 mkdir -p ${repo_dir}/manifests
 cat > ${repo_dir}/manifests/cluster-config.yaml << EOF
@@ -88,7 +88,7 @@ data:
   cluster_name: {cluster_name}
 EOF
 
-private_key=$(cat ${keys_dir}/flux-key | base64 --wrap=0)
+private_key=$(cat ${keys_dir}/flux-keys | base64 --wrap=0)
 cat > ${repo_dir}/manifests/deploy-key.yaml << EOF
 ---
 apiVersion: v1

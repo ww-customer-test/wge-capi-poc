@@ -20,6 +20,7 @@ function usage()
 function args() {
   file_prefix="id_rsa"
   comment=""
+  comment_arg=""
   debug=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
@@ -47,5 +48,5 @@ function args() {
 
 args "$@"
 
-ssh-keygen -q -t rsa -b 4096 "${comment_arg}" -f "${file_prefix}" -N ""
+ssh-keygen -q -t rsa -b 4096 ${comment_arg} -f "${file_prefix}" -N ""
 

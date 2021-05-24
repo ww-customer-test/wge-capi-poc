@@ -67,7 +67,7 @@ kubectl -n ${aws_account} create secret generic account-creds \
     --dry-run=client \
     -o yaml > /tmp/aws-auth.yaml
 
-kubeseal --format=yaml --cert=./${key_file} < /tmp/aws-auth.yaml > ${sealed_secret_file}
+kubeseal --format=yaml --cert=${key_file} < /tmp/aws-auth.yaml > ${sealed_secret_file}
 
 rm /tmp/aws-auth.yaml
 

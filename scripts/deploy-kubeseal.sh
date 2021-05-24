@@ -37,10 +37,6 @@ function args() {
     esac
     (( arg_index+=1 ))
   done
-  path="${arg_list[*]:$arg_index:$(( arg_count - arg_index + 1))}"
-  if [ -z "${path:-}" ] ; then
-      usage; exit 1
-  fi
 }
 
 args "$@"

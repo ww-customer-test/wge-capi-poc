@@ -21,6 +21,7 @@ function usage()
 function args() {
   key_file=""
   aws_account=""
+  debug=""
 
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
@@ -29,7 +30,7 @@ function args() {
     case "${arg_list[${arg_index}]}" in
           "--key-file") (( arg_index+=1 ));key_file="${arg_list[${arg_index}]}";;
           "--aws-account-name") (( arg_index+=1 ));aws_account="${arg_list[${arg_index}]}";;
-          "--debug") set -x;;
+          "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
                "-?") usage; exit;;

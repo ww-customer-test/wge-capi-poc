@@ -16,13 +16,14 @@ function usage()
 
 function args() {
   kubeconfig_path=${KUBECONFIG:-$HOME/.kube/config}
+  debug=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
           "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
-          "--debug") set -x;;
+          "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
                "-?") usage; exit;;

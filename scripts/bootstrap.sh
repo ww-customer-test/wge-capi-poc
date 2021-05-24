@@ -32,11 +32,11 @@ do
         AWS_SECRET_ACCESS_KEY="${arg#*=}"
         shift
         ;;
-        --${MGMT_CLUSTER_NAME}-cluster-repo-url=*)
+        --mgmt-cluster-repo-url=*)
         MGMT_CLUSTER_REPO_URL="${arg#*=}"
         shift
         ;;
-        --${MGMT_CLUSTER_NAME}-cluster-name=*)
+        --mgmt-cluster-name=*)
         MGMT_CLUSTER_NAME="${arg#*=}"
         shift
         ;;
@@ -156,11 +156,6 @@ export EXP_EKS_IAM=false
 export EXP_MACHINE_POOL=true
 export EXP_CLUSTER_RESOURCE_SET=true
 
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
-    git add -A;git commit -a -m "commit changes before bootstrap"; git push
-fi
-
 if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     # No management cluster kubeconfig, creating bootstrap cluster
     echo ""
@@ -169,6 +164,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
         kind create cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
     fi
 
+    echo "Deploy CAPI and provider"
     if [ -z "$(kubectl  get ns capi-system)" ] ; then
         clusterctl init -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
     fi
@@ -181,22 +177,23 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
-    deploy-kubeseal.sh ${debug} ${mgmt_repo_dir}/clusters/bootstrap
-    kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/clusters/bootstrap/pub-sealed-secrets.pem --aws-account-name account-one ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
+    setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
+    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
+    kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
+    kubectl apply -f addons/flux/flux-system
+    #kubectl apply -f addons/flux/self.yaml
+    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
+    kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
+    kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
     git -C ${mgmt_repo_dir} add eks-accounts/account-one-secret.yaml
-    mkdir ${mgmt_repo_dir}/clusters/bootstap/flux
-    deploy-flux.sh ${debug} clusters/bootstap/flux
-
-    # retrieve flux-system secret and write as sealed secret to repo
-
-    git -C ${mgmt_repo_dir} commit -a -m "flux and kubeseal setup for bootstrap cluster"
+    git -C ${mgmt_repo_dir} commit -a -m "eks accounts"
     git -C ${mgmt_repo_dir} push
 
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
     kubectl apply -f addons/flux/self.yaml
     kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
-    kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/mgmt01
+    kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
 
     echo ""
     echo "Waiting for cluster to be ready"
@@ -253,8 +250,9 @@ if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
 fi
 
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
 kubectl apply -f addons/flux/flux-system
-kubectl apply -f addons/flux/self.yaml
+#kubectl apply -f addons/flux/self.yaml
 kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml

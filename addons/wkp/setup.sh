@@ -106,7 +106,7 @@ if [ -n "${GIT_URL:-}" ]; then
         echo "  ssh-keygen -q -t rsa -b 4096 -C wk@weave.works -f ${GIT_DEPLOY_KEY} -N \"\"" >&2
         ssh-keygen -q -t rsa -b 4096 -C wk@weave.works -f "${GIT_DEPLOY_KEY}" -N ""
 
-        deploy-key.sh --debug ${GIT_DEPLOY_KEY}.pub
+        deploy-key.sh --debug --pubkey-file ${GIT_DEPLOY_KEY}.pub --git-url ${GIT_URL}
     fi
 
     git remote rm origin 2>/dev/null || echo "No origin found: OK"

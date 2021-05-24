@@ -182,7 +182,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     git -C ${mgmt_repo_dir} pull
     
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-    kubectl apply -f addons/flux/flux-system
+    kubectl apply -k addons/flux/flux-system
     kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
 
 

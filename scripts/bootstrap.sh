@@ -246,9 +246,11 @@ kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml
 
+export CREDS_DIR=$HOME/tenant01
 source $CREDS_DIR/aws-account-one.sh
 tenants.sh tenant01 git@github.com:ww-customer-test/tenant01-cluster.git
 
+export CREDS_DIR=$HOME/tenant02
 source $CREDS_DIR/aws-account-two.sh
 tenants.sh tenant02 git@github.com:ww-customer-test/tenant02-cluster.git
 

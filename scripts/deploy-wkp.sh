@@ -9,20 +9,16 @@ debug=""
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <git-url>"
-    echo "optional use --kubeconfig option to specify kubeconfig file"
-    echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
+    echo "usage ${0} [--debug] <git-url>"
     echo "This script will setup wkp on a cluster, use <git-url> to specify the directory the repository to use"
 }
 
 function args() {
-  kubeconfig_path=${KUBECONFIG:-$HOME/.kube/config}
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
-          "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -82,7 +78,10 @@ if [ -e cluster/platform/gitops-secrets.yaml ] ; then
   wkp-setup.sh ${debug}
 fi
 
-sed s#GIT_URL#${git_url}# ~/config.yaml > setup/config.yaml
+sed s#GIT_URL#${git_url}# ${script_dir}/../addons/wkp/config.yaml | \
+  sed s/CLUSTER_NAME/${cluster_name}/ | \
+  sed s#CREDS_DIR#${CREDS_DIR}# > setup/config.yaml
+
 cp ${script_dir}/../addons/wkp/setup.sh setup
 export WKP_DEBUG=true
 export TRACE_SETUP=y

@@ -81,7 +81,7 @@ cat > ${repo_dir}/manifests/cluster-info.yaml << EOF
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cluster-info-addon
+  name: cluster-info
   namespace: kube-system
 data:
   cluster_repo_url: ${git_url}

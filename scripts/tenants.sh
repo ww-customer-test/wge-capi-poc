@@ -8,10 +8,12 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] <path>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] --tenant-name <tenant-name> --git-url <url of tenant cluster github repository"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
-    echo "This script will setup flux on a cluster"
+    echo "<cluster-name> is the name of the cluster"
+    echo "<git-url> is the url of the github repository to use"
+    echo "This script will setup tenant cluster"
 }
 
 function args() {
@@ -23,6 +25,7 @@ function args() {
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
           "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
+
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -42,20 +45,21 @@ function args() {
   fi
 }
 
-kubectl -n tenants get secret tenant01-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/tenant01.kubeconfig
-export KUBECONFIG=${CREDS_DIR}/tenant01.kubeconfig
+echo ""
+echo "Waiting for tenant clusters to be ready"
+kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/${tenant_name}
 
-deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-tenant01.git
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
-    git add -A;git commit -a -m "flux and kubeseal setup for eks tenant01 cluster"; git push
-fi
+kubectl -n tenants get secret ${tenant_name}-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${tenant_name}.kubeconfig
+export KUBECONFIG=${CREDS_DIR}/${tenant_name}.kubeconfig
 
 tenant_repo_dir=$(mktemp -d -t ${TENANT_CLUSTER_NAME}-XXXXXXXXXX)
 
 git clone ${TENANT_CLUSTER_REPO_URL} ${tenant_repo_dir}
 
-kubectl apply -f ${tenant_repo_dir}/manifests/cluster-info.yaml
-kubectl apply -f addons/flux/flux-system
-kubectl apply -f addons/flux/self.yaml
+setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name $tenant_name} --git-url ${tenant_repo_dir}
 
+deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-${tenant_name}.git
+
+kubectl apply -f ${tenant_repo_dir}/manifests/cluster-info.yaml
+kubectl apply -f ${tenant_repo_dir}/manifests/manifests.yaml
+kubectl apply -f addons/flux/flux-system

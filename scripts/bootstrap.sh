@@ -181,12 +181,13 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
     kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
     kubectl apply -f addons/flux/flux-system
-    #kubectl apply -f addons/flux/self.yaml
+
     deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
+
     kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
     kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
     git -C ${mgmt_repo_dir} add eks-accounts/account-one-secret.yaml
-    git -C ${mgmt_repo_dir} commit -a -m "eks accounts"
+    git -C ${mgmt_repo_dir} commit -a -m "eks accounts sealed secrets"
     git -C ${mgmt_repo_dir} push
 
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
@@ -236,29 +237,18 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
 fi
 export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
 
-deploy-wkp.sh ${debug} git@github.com:ww-customer-test/wkp-mgmt01.git
-
-
-##### 
-exit
-
-kubeseal-aws-account.sh ${debug} --key-file #====wkp_sealed_secret=== --aws-account-name account-one  ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
-kubeseal-aws-account.sh ${debug} --key-file #====wkp_sealed_secret=== --aws-account-name account-two  ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
-    git add -A;git commit -a -m "flux and kubeseal setup for eks ${MGMT_CLUSTER_NAME} cluster"; git push
-fi
+deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
 kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
 kubectl apply -f addons/flux/flux-system
-#kubectl apply -f addons/flux/self.yaml
 kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml
 
-echo ""
-echo "Waiting for tenant clusters to be ready"
-kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/tenant01
-kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/tenant02
+source $CREDS_DIR/aws-account-one.sh
+tenants.sh tenant01 git@github.com:ww-customer-test/tenant01-cluster.git
+
+source $CREDS_DIR/aws-account-two.sh
+tenants.sh tenant02 git@github.com:ww-customer-test/tenant02-cluster.git
 

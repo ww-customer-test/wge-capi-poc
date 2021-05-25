@@ -66,7 +66,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cluster-info
-  namespace: kube-system
+  namespace: flux-system
 data:
   cluster_repo_url: $(echo -n "${git_url}" | sed s#:#/#)
   cluster_name: ${cluster_name}

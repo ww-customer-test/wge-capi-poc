@@ -84,6 +84,9 @@ sed s#GIT_URL#${git_url}# ${script_dir}/../addons/wkp/config.yaml | \
   sed s/CLUSTER_NAME/${cluster_name}/ | \
   sed s#CREDS_DIR#${CREDS_DIR}# > setup/config.yaml
 
+cp $CREDS_DIR/sealed-secrets-cert.crt setup
+cp $CREDS_DIR/sealed-secrets-key setup
+
 cp ${script_dir}/../addons/wkp/setup.sh setup
 export WKP_DEBUG=true
 export TRACE_SETUP=y

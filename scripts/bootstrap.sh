@@ -173,6 +173,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
+    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
     setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
     
     git -C ${mgmt_repo_dir} pull
@@ -184,9 +185,6 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
     kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-
-
-    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
 
     kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
     kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml

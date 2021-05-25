@@ -59,9 +59,6 @@ args "$@"
 repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 git clone ${git_url} ${repo_dir}
 
-create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/flux-keys
-deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
-
 mkdir -p ${repo_dir}/manifests
 cat > ${repo_dir}/manifests/cluster-info.yaml << EOF
 ---
@@ -75,40 +72,17 @@ data:
   cluster_name: ${cluster_name}
 EOF
 
+create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/flux-keys
+deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
+
 known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
 private_key=$(cat ${keys_dir}/flux-keys | base64 --wrap=0)
 public_key=$(cat ${keys_dir}/flux-keys.pub | base64 --wrap=0)
 
-cat > ${repo_dir}/manifests/cluster-deploy-key.yaml << EOF
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cluster-config
-  namespace: flux-system
-data:
-  identity: ${private_key}
-  identity.pub: ${public_key}
-  known_hosts: ${known_hosts}
-type: Opaque
-EOF
 
-cat > ${repo_dir}/manifests/addons-deploy-key.yaml << EOF
-apiVersion: v1
-data:
-  identity: 
-  identity.pub: 
-  known_hosts: ${known_hosts}
-kind: Secret
-metadata:
-  name: flux-system
-  namespace: flux-system
-type: Opaque
-EOF
-
-if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
+if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
   git -C ${repo_dir} add manifests
-  git -C ${repo_dir} commit -a -m "add cluster config and deploy key to manifest files"
+  git -C ${repo_dir} commit -a -m "add cluster config to manifest files"
   git -C ${repo_dir} push
 fi
 
@@ -123,3 +97,54 @@ if [ ! -f "${repo_dir}/pub-sealed-secrets.pem" ] ; then
     git -C ${repo_dir} commit -a -m "add sealed secret public key"
     git -C ${repo_dir} push
 fi
+
+
+create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/cluster-keys
+deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/cluster-keys.pub --git-url ${git_url}
+
+known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
+private_key=$(cat ${keys_dir}/cluster-keys | base64 --wrap=0)
+public_key=$(cat ${keys_dir}/cluster-keys.pub | base64 --wrap=0)
+
+kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/manifests/cluster-deploy-keys.yaml << EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-config
+  namespace: flux-system
+data:
+  identity: ${private_key}
+  identity.pub: ${public_key}
+  known_hosts: ${known_hosts}
+type: Opaque
+EOF
+
+git -C ${repo_dir} add manifests/cluster-deploy-keys.yaml
+git -C ${repo_dir} commit -a -m "add cluster deploy keys sealed secret"
+git -C ${repo_dir} push
+
+create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/addons-keys
+deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/addons-keys.pub --git-url $(git remote -v | grep "(fetch)" | awk '{print $2}')
+
+known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
+private_key=$(cat ${keys_dir}/addons-keys | base64 --wrap=0)
+public_key=$(cat ${keys_dir}/addons-keys.pub | base64 --wrap=0)
+
+kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/manifests/addons-deploy-keys.yaml << EOF
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flux-system
+  namespace: flux-system
+data:
+  identity: ${private_key}
+  identity.pub: ${public_key}
+  known_hosts: ${known_hosts}
+type: Opaque
+EOF
+
+git -C ${repo_dir} add manifests/addons-deploy-keys.yaml
+git -C ${repo_dir} commit -a -m "add addons deploy keys sealed secret"
+git -C ${repo_dir} push

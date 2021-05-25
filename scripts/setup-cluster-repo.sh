@@ -71,7 +71,7 @@ metadata:
   name: cluster-info
   namespace: kube-system
 data:
-  cluster_repo_url: ${git_url}
+  cluster_repo_url: $(echo -n "${git_url}" | sed s#:#/#)
   cluster_name: ${cluster_name}
 EOF
 

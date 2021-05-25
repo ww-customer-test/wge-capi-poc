@@ -56,7 +56,7 @@ export GITURL_REPO="$(echo "${git_url}" | cut -f2 -d/ | cut -f1 -d.)"
 
 curl -i -H"Authorization: token $GITHUB_TOKEN" --data @- https://api.github.com/repos/$GITURL_ORG/$GITURL_REPO/keys << EOF
 {
-    "title" : "$GITURL_REPO $(date)",
+    "title" : "readolny",
     "key" : "$(cat $key_file)",
     "read_only" : ${read_only}
 }

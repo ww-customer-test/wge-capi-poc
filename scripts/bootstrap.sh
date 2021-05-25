@@ -4,7 +4,7 @@ BOOTSTRAP_PROVIDERS=kubeadm:v0.3.12,aws-eks
 CONTROLPLANE_PROVIDERS=kubeadm:v0.3.12,aws-eks
 KEEP_KIND=false
 debug=""
-base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
+export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 export PATH=$PATH
 
@@ -183,7 +183,10 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     git -C ${mgmt_repo_dir} pull
     
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-    kubectl apply -k ${base_dir}/addons/flux/flux-system
+    kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+    kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
+    kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
+    kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
     kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
 
 

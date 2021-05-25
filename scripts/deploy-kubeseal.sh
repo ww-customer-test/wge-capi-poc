@@ -41,8 +41,8 @@ function args() {
 
 args "$@"
 
-private_key=$(echo -n ${privatekey_file} | base64 --wrap=0)
-public_key=$(echo -n ${pubkey_file} | base64 --wrap=0)
+private_key=$(cat ${privatekey_file} | base64 --wrap=0)
+public_key=$(cat ${pubkey_file} | base64 --wrap=0)
 
 kubectl apply -f - << EOF
 apiVersion: v1
@@ -58,17 +58,7 @@ metadata:
 type: kubernetes.io/tls
 EOF
 
-flux create source helm sealed-secrets \
---interval=1h \
---url=https://bitnami-labs.github.io/sealed-secrets
-
-flux create helmrelease sealed-secrets \
---interval=1h \
---release-name=sealed-secrets \
---target-namespace=kube-system \
---source=HelmRepository/sealed-secrets \
---chart=sealed-secrets \
---chart-version="1.13.x"
+kubectl apply -f ${base_dir}/addons/sealed-secrets
 
 if [ ! -f "${pubkey_file}" ] ; then
   kubeseal --fetch-cert \

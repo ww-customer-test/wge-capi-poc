@@ -240,7 +240,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
 fi
 export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
 
-deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
+deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
 git -C ${mgmt_repo_dir} pull
     

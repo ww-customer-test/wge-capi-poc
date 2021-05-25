@@ -75,12 +75,12 @@ dockerIOPasswordFile: 'CREDS_DIR/dockerhub-password'
 # Path to a certificate used to encrypt sealed secrets.
 # If left blank a self signed certificate will be created.
 # Provide absolute path or relative from the directory of this config.yaml file
-sealedSecretsCertificate: 'CREDS_DIR/sealed-secrets-key'
+sealedSecretsCertificate: 'CREDS_DIR/sealed-secrets-cert.crt'
 
 # Path to a private key used to decrypt sealed secrets.
 # If left blank a new private key will be created.
 # Provide absolute path or relative from the directory of this config.yaml file
-sealedSecretsPrivateKey: 'CREDS_DIR/sealed-secrets-cert.crt'
+sealedSecretsPrivateKey: 'CREDS_DIR/sealed-secrets-key'
 
 # Map with WKP features that are enabled in the cluster.
 # To apply changes made here, commit and push the

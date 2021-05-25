@@ -73,7 +73,7 @@ wkp-setup.sh ${debug}
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
   echo "gitops secret yaml already present, reseting"
   rm -rf * .flux.yaml .gitignore
-  git reset --hard v2.5.0
+  git reset --hard $(git log --pretty=oneline --pretty=format:"%H %ae %s" | grep "support@weave.works Initial commit" | awk '{print $1}')
   git push -f
   remove-wkp-kubeseal.sh ${debug}
   remove-wkp-flux1.sh ${debug}

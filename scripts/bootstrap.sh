@@ -132,13 +132,8 @@ git clone ${MGMT_CLUSTER_REPO_URL} ${mgmt_repo_dir}
 
 MGMT_CLUSTER_DEF_FILE=${mgmt_repo_dir}/infra/${MGMT_CLUSTER_NAME}/${MGMT_CLUSTER_NAME}.yaml
 
-CLUSTER_NAMESPACE=$(cat ${MGMT_CLUSTER_DEF_FILE} | yq e 'select(documentIndex == 1) | .metadata.namespace' -)
-if [ "${CLUSTER_NAMESPACE}" != "null" ] ; then
-    echo "cluster namespace: $CLUSTER_NAMESPACE"
-    namespace_setting="-n ${CLUSTER_NAMESPACE}"
-else
-    namespace_setting=""
-fi
+CLUSTER_NAMESPACE=${MGMT_CLUSTER_NAME}
+namespace_setting="-n ${CLUSTER_NAMESPACE}"
 
 if [[ "${INFRA_PROVIDERS:-}" == *"aws"* ]]; then
     echo ""

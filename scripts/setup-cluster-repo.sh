@@ -34,7 +34,7 @@ function args() {
                "-?") usage; exit;;
         *) if [ "${arg_list[${arg_index}]:0:2}" == "--" ];then
                echo "invalid argument: ${arg_list[${arg_index}]}"
-               usage; exit
+               usage; exit 1
            fi;
            break;;
     esac

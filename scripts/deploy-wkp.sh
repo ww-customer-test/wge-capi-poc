@@ -5,45 +5,45 @@
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
 set -euo pipefail
-debug=""
 
 function usage()
 {
-    echo "usage ${0} [--debug] <git-url>"
+    echo "usage ${0} [--debug] --cluster-name <cluster-name> --git-url <git-url>"
+    echo "<cluster-name> is the name of the cluster"
+    echo "<git-url> is the url of the github repository to use for WKP install"
     echo "This script will setup wkp on a cluster, use <git-url> to specify the directory the repository to use"
 }
 
 function args() {
+  git_url=""
+  debug=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
+          "--cluster-name") (( arg_index+=1 ));cluster_name="${arg_list[${arg_index}]}";;
+          "--git-url") (( arg_index+=1 ));git_url="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
                "-?") usage; exit;;
         *) if [ "${arg_list[${arg_index}]:0:2}" == "--" ];then
                echo "invalid argument: ${arg_list[${arg_index}]}"
-               usage; exit
+               usage; exit 1
            fi;
            break;;
     esac
     (( arg_index+=1 ))
   done
-  git_url="${arg_list[*]:$arg_index:$(( arg_count - arg_index + 1))}"
   if [ -z "${git_url:-}" ] ; then
       usage
       exit 1
   fi
   dir_name="$(echo "${git_url}" | cut -f2 -d/ | cut -f1 -d.)"
-  if [ -d "${dir_name}" ] ; then
-    if [ -f "${dir_name}" ] ; then
-      echo "${dir_name} is a file not a directory"
+  if [ -z "${cluster_name:-}" ] ; then
+      usage
       exit 1
-    fi
-  else
-    mkdir -p ${dir_name} 
   fi
 }
 
@@ -58,7 +58,9 @@ fi
 set -e
 
 script_dir=$(dirname ${BASH_SOURCE[0]})
-pushd ${dir_name}
+repo_dir=$(mktemp -d -t wkp-${cluster_name}-XXXXXXXXXX)
+git clone ${git_url} ${repo_dir}
+pushd ${repo_dir}
 
 if [ -z "$(git remote | grep origin)" ] ; then
   git remote add origin ${git_URL}

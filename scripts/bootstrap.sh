@@ -182,8 +182,8 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     
     git -C ${mgmt_repo_dir} pull
     
-    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
     kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-keys.yaml
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-keys.yaml
     kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
@@ -249,8 +249,8 @@ deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
 git -C ${mgmt_repo_dir} pull
     
-kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
 kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-keys.yaml
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-keys.yaml
 kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io

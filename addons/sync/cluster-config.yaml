@@ -10,4 +10,4 @@ spec:
     branch: main
   secretRef:
     name: cluster-config
-  url: ssh://"${cluster_repo_url}"
+  url: ssh://${cluster_repo_url}

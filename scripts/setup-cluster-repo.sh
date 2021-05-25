@@ -75,8 +75,11 @@ data:
   cluster_name: ${cluster_name}
 EOF
 
+known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
 private_key=$(cat ${keys_dir}/flux-keys | base64 --wrap=0)
-cat > ${repo_dir}/manifests/deploy-key.yaml << EOF
+public_key=$(cat ${keys_dir}/flux-keys.pub | base64 --wrap=0)
+
+cat > ${repo_dir}/manifests/cluster-deploy-key.yaml << EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -85,6 +88,22 @@ metadata:
   namespace: flux-system
 data:
   identity: ${private_key}
+  identity.pub: ${public_key}
+  known_hosts: ${known_hosts}
+type: Opaque
+EOF
+
+cat > ${repo_dir}/manifests/addons-deploy-key.yaml << EOF
+apiVersion: v1
+data:
+  identity: 
+  identity.pub: 
+  known_hosts: ${known_hosts}
+kind: Secret
+metadata:
+  name: flux-system
+  namespace: flux-system
+type: Opaque
 EOF
 
 if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then

@@ -187,8 +187,8 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
     kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-    kubectl apply -f ${base_dir}/addons/flux/deploy-key.yaml
-    kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
+    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-key.yaml
+    kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-key.yaml
 
 
     deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
@@ -255,8 +255,8 @@ kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
 kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
 kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-kubectl apply -f ${base_dir}/addons/flux/deploy-key.yaml
-kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-key.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-key.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
 kubectl apply -f ${base_dir}/addons/flux/self.yaml

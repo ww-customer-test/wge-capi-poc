@@ -34,7 +34,7 @@ data:
                   valueFrom:
                     configMapKeyRef:
                       name: cluster-info
-                      namespace: kube-system
+                      namespace: flux-system
                       key: cluster_name
           restartPolicy: Never
           volumes:

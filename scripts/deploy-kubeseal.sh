@@ -40,17 +40,23 @@ function args() {
 }
 
 args "$@"
-if [[ -f "${privatekey_file}" && -f "${pubkey_file}" ]] ; then
-  # Sealed secrets installation
-  kubectl --namespace="kube-system" \
-      create secret tls sealed-secrets-key \
-      --cert="${pubkey_file}" \
-      --key="${privatekey_file}"
-  kubectl --namespace="kube-system" \
-      label secret sealed-secrets-key \
-      sealedsecrets.bitnami.com/sealed-secrets-key=active \
-      --overwrite=true
-fi
+
+private_key=$(echo -n ${privatekey_file} | base64 --wrap=0)
+public_key=$(echo -n ${pubkey_file} | base64 --wrap=0)
+
+kubectl apply -f - << EOF
+apiVersion: v1
+data:
+  tls.crt: ${public_key} 
+  tls.key: ${private_key}
+kind: Secret
+metadata:
+  labels:
+    sealedsecrets.bitnami.com/sealed-secrets-key: active
+  name: sealed-secrets-key
+  namespace: kube-system
+type: kubernetes.io/tls
+EOF
 
 flux create source helm sealed-secrets \
 --interval=1h \

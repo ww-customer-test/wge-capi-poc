@@ -4,6 +4,7 @@ BOOTSTRAP_PROVIDERS=kubeadm:v0.3.12,aws-eks
 CONTROLPLANE_PROVIDERS=kubeadm:v0.3.12,aws-eks
 KEEP_KIND=false
 debug=""
+base_dir="$(dirname $(realpath ${BASH_SOURCE[0]}))"
 
 export PATH=$PATH
 
@@ -195,7 +196,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     git -C ${mgmt_repo_dir} push
 
     kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-    kubectl apply -f addons/flux/self.yaml
+    kubectl apply -f ${base_dir}/addons/flux/self.yaml
     kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
     kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
@@ -245,7 +246,7 @@ deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
 kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
-kubectl apply -f addons/flux/flux-system
+kubectl apply -f ${base_dir}/addons/flux/flux-system
 kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml

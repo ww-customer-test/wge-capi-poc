@@ -4,7 +4,7 @@ BOOTSTRAP_PROVIDERS=kubeadm:v0.3.12,aws-eks
 CONTROLPLANE_PROVIDERS=kubeadm:v0.3.12,aws-eks
 KEEP_KIND=false
 debug=""
-base_dir="$dirname($(dirname $(realpath ${BASH_SOURCE[0]})))"
+base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 export PATH=$PATH
 

@@ -10,7 +10,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: ssh://git@github.com:ww-customer-test/wkp-capi-poc.git
+  url: ssh://git@github.com:ww-customer-test/wkp-capi-poc
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
 kind: Kustomization

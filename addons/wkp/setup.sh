@@ -443,7 +443,7 @@ elif [ "${TRACK}" == "wks-components" ]; then
         echo "$(kubectl get nodes)"
         echo ""
 
-        check_for_existing_sealed_secrets_and_flux
+        #check_for_existing_sealed_secrets_and_flux
         check_cluster_version
     fi
 

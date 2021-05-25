@@ -16,6 +16,5 @@ spec:
       substituteFrom:
         - kind: ConfigMap
           name: cluster-info
-          namespace: kube-system
   dependsOn:
   - name: flux-system

@@ -187,6 +187,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
     kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
+    kubectl apply -f ${base_dir}/addons/flux/deploy-key.yaml
     kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
 
 
@@ -247,9 +248,18 @@ export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
 
 deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
+git -C ${mgmt_repo_dir} pull
+    
 kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-kubectl apply -f ${mgmt_repo_dir}/manifests/manifests.yaml
-kubectl apply -f ${base_dir}/addons/flux/flux-system
+kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
+kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
+kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
+kubectl apply -f ${base_dir}/addons/flux/deploy-key.yaml
+kubectl apply -f ${mgmt_repo_dir}/manifests/deploy-key.yaml
+
+kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
+kubectl apply -f ${base_dir}/addons/flux/self.yaml
 kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
 
 kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml

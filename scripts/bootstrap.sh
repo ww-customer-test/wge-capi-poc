@@ -258,9 +258,7 @@ kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fl
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
 
 kubectl apply -f ${base_dir}/addons/flux/self.yaml
-kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
-
-kubectl apply -f ${mgmt_repo_dir}/clusters/${MGMT_CLUSTER_NAME}/tenants.yaml
+kubectl apply -f ${mgmt_repo_dir}/clusters/clusters.yaml
 
 export CREDS_DIR=$HOME/tenant01
 source $CREDS_DIR/aws-account-one.sh

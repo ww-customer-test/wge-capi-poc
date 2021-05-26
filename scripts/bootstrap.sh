@@ -173,8 +173,8 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
-    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
     setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
+    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
     
     git -C ${repo_dir} pull
 
@@ -185,7 +185,7 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     git -C ${repo_dir} push
 
     setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
-    
+
     kubectl apply -f ${repo_dir}/clusters/bootstrap/bootstrap.yaml
 
     kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
@@ -241,9 +241,9 @@ kubectl apply -f ${repo_dir}/clusters/clusters.yaml
 
 export CREDS_DIR=$HOME/tenant01
 source $CREDS_DIR/account-one.sh
-tenants.sh tenant01 git@github.com:ww-customer-test/tenant01-cluster.git
+tenants.sh --debug --cluster-name tenant01 --git-url git@github.com:ww-customer-test/tenant01-cluster
 
 export CREDS_DIR=$HOME/tenant02
 source $CREDS_DIR/account-two.sh
-tenants.sh tenant02 git@github.com:ww-customer-test/tenant02-cluster.git
+tenants.sh --debug --cluster-name tenant02 --git-url git@github.com:ww-customer-test/tenant02-cluster
 

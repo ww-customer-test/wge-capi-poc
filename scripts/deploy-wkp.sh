@@ -89,6 +89,7 @@ cp $CREDS_DIR/sealed-secrets-cert.crt setup
 cp $CREDS_DIR/sealed-secrets-key setup
 
 cp ${script_dir}/../addons/wkp/setup.sh setup
+git push -f
 export WKP_DEBUG=true
 export TRACE_SETUP=y
 export GITURL_ORG="$(echo "${git_url}" | cut -f2 -d: | cut -f1 -d/)"

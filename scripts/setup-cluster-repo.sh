@@ -69,14 +69,6 @@ data:
   cluster_name: ${cluster_name}
 EOF
 
-create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/flux-keys
-deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/flux-keys.pub --git-url ${git_url}
-
-known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
-private_key=$(cat ${keys_dir}/flux-keys | base64 --wrap=0)
-public_key=$(cat ${keys_dir}/flux-keys.pub | base64 --wrap=0)
-
-
 if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
   git -C ${repo_dir} add config
   git -C ${repo_dir} commit -a -m "add cluster config to manifest files"
@@ -122,7 +114,7 @@ git -C ${repo_dir} commit -a -m "add cluster deploy keys sealed secret"
 git -C ${repo_dir} push
 
 create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/addons-keys
-deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/addons-keys.pub --git-url $(git remote -v | grep "(fetch)" | awk '{print $2}')
+deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/addons-keys.pub --git-url $(git -C ${base_dir} remote -v | grep "(fetch)" | awk '{print $2}')
 
 known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
 private_key=$(cat ${keys_dir}/addons-keys | base64 --wrap=0)

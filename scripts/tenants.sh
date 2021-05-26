@@ -53,15 +53,18 @@ function args() {
   fi
 }
 
+
+args "$@"
+
 echo ""
 echo "Waiting for tenant clusters to be ready"
-kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/${cluster_name}
+kubectl wait --for=condition=ready --timeout 1h -n ${cluster_name} cluster/${cluster_name}
 
 kubectl -n ${cluster_name} get secret ${cluster_name}-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${cluster_name}.kubeconfig
 export KUBECONFIG=${CREDS_DIR}/${cluster_name}.kubeconfig
 
 setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${cluster_name} --git-url ${git_url}
 
-deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
+deploy-wkp.sh ${debug} --cluster-name ${cluster_name} --git-url git@github.com:ww-customer-test/wkp-${cluster_name}.git
 
 setup-flux.sh ${debug} --cluster-name ${cluster_name} --git-url ${git_url}

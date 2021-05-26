@@ -163,7 +163,7 @@ spec:
 EOF
 
 if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
-  git -C ${repo_dir} add manifests/dummy.yaml
+  git -C ${repo_dir} add config/cluster-config.yaml
   git -C ${repo_dir} commit -a -m "add cluster-config gitrepository custom resource"
   git -C ${repo_dir} push
 fi

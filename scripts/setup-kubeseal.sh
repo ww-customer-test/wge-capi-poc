@@ -8,7 +8,7 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--privatekey-file <privatekey-file>] [--pubkey-file <pubkey-file>]"
+    echo "usage ${0} [--debug] [--privatekey-file <privatekey-file>] [--pubkey-file <pubkey-file>] [--apply]"
     echo "<privatekey-file> is the path of private key file, defaults to $HOME/sealed-secrets-key"
     echo "<pubkey-file> is the path to store the public key file, defaults to $HOME/pub-sealed-secrets.pem"
     echo "This script will setup kubeseal on a cluster"
@@ -18,6 +18,7 @@ function args() {
   privatekey_file="$HOME/sealed-secrets-key"
   pubkey_file="$HOME/pub-sealed-secrets.pem"
   debug=""
+  apply=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
@@ -25,6 +26,7 @@ function args() {
     case "${arg_list[${arg_index}]}" in
           "--pubkey-file") (( arg_index+=1 ));pubkey_file="${arg_list[${arg_index}]}";;
           "--privatekey-file") (( arg_index+=1 ));privatekey_file="${arg_list[${arg_index}]}";;
+          "--apply") apply="true";;
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -58,11 +60,13 @@ metadata:
 type: kubernetes.io/tls
 EOF
 
-kubectl apply -f ${base_dir}/addons/sealed-secrets
-
-if [ ! -f "${pubkey_file}" ] ; then
-  kubeseal --fetch-cert \
-  --controller-name=sealed-secrets \
-  --controller-namespace=kube-system \
-  > ${pubkey_file}
+if [ -n "${apply}" ] ; then
+  kubectl apply -f ${base_dir}/addons/sealed-secrets
 fi
+
+#if [ ! -f "${pubkey_file}" ] ; then
+#  kubeseal --fetch-cert \
+#  --controller-name=sealed-secrets \
+#  --controller-namespace=kube-system \
+#  > ${pubkey_file}
+#fi

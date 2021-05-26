@@ -75,18 +75,45 @@ if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clea
   git -C ${repo_dir} push
 fi
 
-if [ ! -f "${repo_dir}/pub-sealed-secrets.pem" ] ; then
-    echo "Generating the sealed secrets private key and certificate..."
-    openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
-        -subj "/" \
-        -keyout "${keys_dir}/sealed-secrets-key" \
-        -out "${keys_dir}/sealed-secrets-cert.crt"
-    cp ${keys_dir}/sealed-secrets-cert.crt ${repo_dir}/pub-sealed-secrets.pem
-    git -C ${repo_dir} add pub-sealed-secrets.pem
-    git -C ${repo_dir} commit -a -m "add sealed secret public key"
-    git -C ${repo_dir} push
+mkdir -p ${repo_dir}/manifests
+cp ${base_dir}/resources/dummy.yaml ${repo_dir}/manifests
+if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
+  git -C ${repo_dir} add manifests/dummy.yaml
+  git -C ${repo_dir} commit -a -m "add manifests dummy.yaml"
+  git -C ${repo_dir} push
 fi
 
+cat > ${repo_dir}/config/cluster-config.yaml << EOF
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: cluster-config
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: cluster-config
+  url: ssh://$(echo -n "${git_url}" | sed s#:#/#)
+EOF
+
+if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
+  git -C ${repo_dir} add config/cluster-config.yaml
+  git -C ${repo_dir} commit -a -m "add cluster-config gitrepository custom resource"
+  git -C ${repo_dir} push
+fi
+
+echo "Generating the sealed secrets private key and certificate..."
+openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+    -subj "/" \
+    -keyout "${keys_dir}/sealed-secrets-key" \
+    -out "${keys_dir}/sealed-secrets-cert.crt"
+cp ${keys_dir}/sealed-secrets-cert.crt ${repo_dir}/pub-sealed-secrets.pem
+git -C ${repo_dir} add pub-sealed-secrets.pem
+git -C ${repo_dir} commit -a -m "add sealed secret public key"
+git -C ${repo_dir} push
 
 create-deploy-key.sh ${debug} --file-prefix ${keys_dir}/cluster-keys
 deploy-key.sh ${debug} --readonly --pubkey-file ${keys_dir}/cluster-keys.pub --git-url ${git_url}
@@ -138,32 +165,3 @@ git -C ${repo_dir} add config/addons-deploy-keys.yaml
 git -C ${repo_dir} commit -a -m "add addons deploy keys sealed secret"
 git -C ${repo_dir} push
 
-mkdir -p ${repo_dir}/manifests
-cp ${base_dir}/resources/dummy.yaml ${repo_dir}/manifests
-if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
-  git -C ${repo_dir} add manifests/dummy.yaml
-  git -C ${repo_dir} commit -a -m "add manifests dummy.yaml"
-  git -C ${repo_dir} push
-fi
-
-cat > ${repo_dir}/config/cluster-config.yaml << EOF
----
-apiVersion: source.toolkit.fluxcd.io/v1beta1
-kind: GitRepository
-metadata:
-  name: cluster-config
-  namespace: flux-system
-spec:
-  interval: 1m0s
-  ref:
-    branch: main
-  secretRef:
-    name: cluster-config
-  url: ssh://$(echo -n "${git_url}" | sed s#:#/#)
-EOF
-
-if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
-  git -C ${repo_dir} add config/cluster-config.yaml
-  git -C ${repo_dir} commit -a -m "add cluster-config gitrepository custom resource"
-  git -C ${repo_dir} push
-fi

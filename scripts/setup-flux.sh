@@ -55,10 +55,8 @@ repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 git clone ${git_url} ${repo_dir}
 
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
-kubectl apply -f ${repo_dir}/config/cluster-info.yaml
-kubectl apply -f ${repo_dir}/config/addons-deploy-keys.yaml
-kubectl apply -f ${repo_dir}/config/cluster-deploy-keys.yaml
 kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
 kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
+kubectl apply -f ${repo_dir}/config
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
 kubectl apply -f ${base_dir}/addons/flux/self.yaml

@@ -52,7 +52,7 @@ args "$@"
 set +e
 wkp-installed.sh --wait 1
 if [[ "$?" == "0" ]] ; then
-    echo "wkp installed on cluster"
+    echo "wkp already installed on cluster"
     exit 0
 fi
 set -e

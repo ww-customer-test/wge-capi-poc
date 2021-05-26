@@ -240,10 +240,8 @@ setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUS
 kubectl apply -f ${repo_dir}/clusters/clusters.yaml
 
 export CREDS_DIR=$HOME/tenant01
-source $CREDS_DIR/account-one.sh
 tenants.sh --debug --cluster-name tenant01 --git-url git@github.com:ww-customer-test/tenant01-cluster
 
 export CREDS_DIR=$HOME/tenant02
-source $CREDS_DIR/account-two.sh
 tenants.sh --debug --cluster-name tenant02 --git-url git@github.com:ww-customer-test/tenant02-cluster
 

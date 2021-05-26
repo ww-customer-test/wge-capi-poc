@@ -53,8 +53,6 @@ while [ "$(kubectl -n wkp-flux get deployments.apps 2>/dev/null | awk '{print $1
   timeout=$((timeout-1))
 done
 
-kubectl wait --for=condition=Available --timeout=2m -n wkp-flux deployments.apps flux
+kubectl wait --for=condition=Available --timeout=1m -n wkp-flux deployments.apps flux
 
-sleep $wait
 
-kubectl wait --for=condition=Available --timeout=2m -n wkp-workspaces deployments.apps wkp-workspaces-controller

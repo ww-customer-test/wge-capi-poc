@@ -61,6 +61,7 @@ echo "Waiting for tenant clusters to be ready"
 kubectl wait --for=condition=ready --timeout 1h -n ${cluster_name} cluster/${cluster_name}
 
 kubectl -n ${cluster_name} get secret ${cluster_name}-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${cluster_name}.kubeconfig
+source $CREDS_DIR/account.sh
 export KUBECONFIG=${CREDS_DIR}/${cluster_name}.kubeconfig
 
 setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${cluster_name} --git-url ${git_url}

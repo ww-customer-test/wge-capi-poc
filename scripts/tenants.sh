@@ -64,16 +64,4 @@ setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${cluster_na
 
 deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
-repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
-
-git clone ${git_url} ${repo_dir}
-
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
-kubectl apply -f ${repo_dir}/config/cluster-info.yaml
-kubectl apply -f ${repo_dir}/config/addons-deploy-keys.yaml
-kubectl apply -f ${repo_dir}/config/cluster-deploy-keys.yaml
-kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
-kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-
-kubectl apply -f ${base_dir}/addons/flux/self.yaml
+setup-flux.sh ${debug} --cluster-name ${cluster_name} --git-url ${git_url}

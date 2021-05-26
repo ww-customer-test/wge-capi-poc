@@ -1,0 +1,8 @@
+--- 
+# Do not remove, dummy config map created by flux because empty directories are not processed
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dummy
+data:
+  text: "This is a dummy config map created by flux because empty directories are not processed"

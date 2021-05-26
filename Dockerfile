@@ -27,8 +27,6 @@ RUN apt-get -y install software-properties-common \
 
 RUN curl -L https://storage.googleapis.com/kubernetes-release/release/v1.19.0/bin/linux/amd64/kubectl -o /bin/kubectl && chmod +x /bin/kubectl
 RUN curl -L https://github.com/jkcfg/jk/releases/download/0.4.0/jk-linux-amd64 -o /bin/jk && chmod +x /bin/jk
-
-
 RUN curl -O https://weaveworks-wkp-releases.s3.amazonaws.com/wk-v2.5.0.tgz
 
 RUN tar -zxvf wk-v2.5.0.tgz \
@@ -38,5 +36,7 @@ RUN tar -zxvf wk-v2.5.0.tgz \
     && mv wk-v2.5.0-linux-amd64 /bin/wk
 
 COPY scripts/ /scripts
+COPY addons/ /addons
+COPY resources/ /resources
 
 RUN chmod +x /scripts/*

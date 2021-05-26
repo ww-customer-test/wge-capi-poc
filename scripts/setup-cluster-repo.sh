@@ -6,6 +6,7 @@
 
 set -euo pipefail
 debug=""
+export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 function usage()
 {
@@ -144,3 +145,11 @@ EOF
 git -C ${repo_dir} add config/addons-deploy-keys.yaml
 git -C ${repo_dir} commit -a -m "add addons deploy keys sealed secret"
 git -C ${repo_dir} push
+
+mkdir -p ${repo_dir}/manifests
+cp ${base_dir}/resources/dummy.yaml ${repo_dir}/manifests
+if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
+  git -C ${repo_dir} add manifests/dummy.yaml
+  git -C ${repo_dir} commit -a -m "add manifests dummy.yaml"
+  git -C ${repo_dir} push
+fi

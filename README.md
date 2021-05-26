@@ -50,7 +50,7 @@ export GITHUB_REPO=<repository name>
 * Run the following command from the cloned repo:
 
 ```sh
-clusterawsadm bootstrap iam create-cloudformation-stack --region eu-west-1 --config bootstrap.config -v 12
+clusterawsadm bootstrap iam create-cloudformation-stack --region eu-west-1 --config resources/bootstrap.config -v 12
 
 Attempting to create AWS CloudFormation stack cluster-api-provider-aws-sigs-k8s-io
 

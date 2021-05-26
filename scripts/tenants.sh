@@ -6,9 +6,11 @@
 
 set -euo pipefail
 
+export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
+
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] --tenant-name <tenant-name> --git-url <url of tenant cluster github repository"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] --cluster-name <cluster-name> --git-url <url of tenant cluster github repository>"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
     echo "<cluster-name> is the name of the cluster"
@@ -19,13 +21,16 @@ function usage()
 function args() {
   kubeconfig_path=${KUBECONFIG:-$HOME/.kube/config}
   debug=""
+  cluster_name=""
+  git_url=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
           "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
-
+          "--cluster-name") (( arg_index+=1 ));cluster_name="${arg_list[${arg_index}]}";;
+          "--git-url") (( arg_index+=1 ));git_url="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -38,8 +43,11 @@ function args() {
     esac
     (( arg_index+=1 ))
   done
-  path="${arg_list[*]:$arg_index:$(( arg_count - arg_index + 1))}"
-  if [ -z "${path:-}" ] ; then
+  if [ -z "${git_url:-}" ] ; then
+      usage
+      exit 1
+  fi
+  if [ -z "${cluster_name:-}" ] ; then
       usage
       exit 1
   fi
@@ -47,19 +55,25 @@ function args() {
 
 echo ""
 echo "Waiting for tenant clusters to be ready"
-kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/${tenant_name}
+kubectl wait --for=condition=ready --timeout 1h -n tenants cluster/${cluster_name}
 
-kubectl -n tenants get secret ${tenant_name}-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${tenant_name}.kubeconfig
-export KUBECONFIG=${CREDS_DIR}/${tenant_name}.kubeconfig
+kubectl -n ${cluster_name} get secret ${cluster_name}-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${cluster_name}.kubeconfig
+export KUBECONFIG=${CREDS_DIR}/${cluster_name}.kubeconfig
 
-tenant_repo_dir=$(mktemp -d -t ${TENANT_CLUSTER_NAME}-XXXXXXXXXX)
+setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${cluster_name} --git-url ${git_url}
 
-git clone ${TENANT_CLUSTER_REPO_URL} ${tenant_repo_dir}
+deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
-setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name $tenant_name} --git-url ${tenant_repo_dir}
+repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 
-deploy-wkp.sh ${debug} --git-url git@github.com:ww-customer-test/wkp-${tenant_name}.git
+git clone ${git_url} ${repo_dir}
 
-kubectl apply -f ${tenant_repo_dir}/manifests/cluster-info.yaml
-kubectl apply -f ${tenant_repo_dir}/manifests/manifests.yaml
-kubectl apply -f addons/flux/flux-system
+kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+kubectl apply -f ${repo_dir}/config/cluster-info.yaml
+kubectl apply -f ${repo_dir}/config/addons-deploy-keys.yaml
+kubectl apply -f ${repo_dir}/config/cluster-deploy-keys.yaml
+kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
+kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
+kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
+
+kubectl apply -f ${base_dir}/addons/flux/self.yaml

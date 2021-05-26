@@ -48,10 +48,6 @@ function args() {
       usage
       exit 1
   fi
-  if [ -z "${git_url:-}" ] ; then
-      usage
-      exit 1
-  fi
 }
 
 args "$@"
@@ -59,8 +55,8 @@ args "$@"
 repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 git clone ${git_url} ${repo_dir}
 
-mkdir -p ${repo_dir}/manifests
-cat > ${repo_dir}/manifests/cluster-info.yaml << EOF
+mkdir -p ${repo_dir}/config
+cat > ${repo_dir}/config/cluster-info.yaml << EOF
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -81,7 +77,7 @@ public_key=$(cat ${keys_dir}/flux-keys.pub | base64 --wrap=0)
 
 
 if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
-  git -C ${repo_dir} add manifests
+  git -C ${repo_dir} add config
   git -C ${repo_dir} commit -a -m "add cluster config to manifest files"
   git -C ${repo_dir} push
 fi
@@ -106,7 +102,7 @@ known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
 private_key=$(cat ${keys_dir}/cluster-keys | base64 --wrap=0)
 public_key=$(cat ${keys_dir}/cluster-keys.pub | base64 --wrap=0)
 
-kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/manifests/cluster-deploy-keys.yaml << EOF
+kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/config/cluster-deploy-keys.yaml << EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -120,7 +116,7 @@ data:
 type: Opaque
 EOF
 
-git -C ${repo_dir} add manifests/cluster-deploy-keys.yaml
+git -C ${repo_dir} add config/cluster-deploy-keys.yaml
 git -C ${repo_dir} commit -a -m "add cluster deploy keys sealed secret"
 git -C ${repo_dir} push
 
@@ -131,7 +127,7 @@ known_hosts=$(ssh-keyscan github.com 2>/dev/null | base64 --wrap 0)
 private_key=$(cat ${keys_dir}/addons-keys | base64 --wrap=0)
 public_key=$(cat ${keys_dir}/addons-keys.pub | base64 --wrap=0)
 
-kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/manifests/addons-deploy-keys.yaml << EOF
+kubeseal --format=yaml --cert=${repo_dir}/pub-sealed-secrets.pem > ${repo_dir}/config/addons-deploy-keys.yaml << EOF
 ---
 apiVersion: v1
 kind: Secret
@@ -145,6 +141,6 @@ data:
 type: Opaque
 EOF
 
-git -C ${repo_dir} add manifests/addons-deploy-keys.yaml
+git -C ${repo_dir} add config/addons-deploy-keys.yaml
 git -C ${repo_dir} commit -a -m "add addons deploy keys sealed secret"
 git -C ${repo_dir} push

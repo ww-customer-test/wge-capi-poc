@@ -126,11 +126,11 @@ if [ -z ${MGMT_CLUSTER_NAME} ]; then
     exit 1
 fi
 
-mgmt_repo_dir=$(mktemp -d -t ${MGMT_CLUSTER_NAME}-XXXXXXXXXX)
+repo_dir=$(mktemp -d -t ${MGMT_CLUSTER_NAME}-XXXXXXXXXX)
 
-git clone ${MGMT_CLUSTER_REPO_URL} ${mgmt_repo_dir}
+git clone ${MGMT_CLUSTER_REPO_URL} ${repo_dir}
 
-MGMT_CLUSTER_DEF_FILE=${mgmt_repo_dir}/infra/${MGMT_CLUSTER_NAME}/${MGMT_CLUSTER_NAME}.yaml
+MGMT_CLUSTER_DEF_FILE=${repo_dir}/infra/${MGMT_CLUSTER_NAME}/${MGMT_CLUSTER_NAME}.yaml
 
 CLUSTER_NAMESPACE=${MGMT_CLUSTER_NAME}
 namespace_setting="-n ${CLUSTER_NAMESPACE}"
@@ -173,27 +173,27 @@ if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
     kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
-    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${mgmt_repo_dir}/pub-sealed-secrets.pem
+    deploy-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
     setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
     
-    git -C ${mgmt_repo_dir} pull
+    git -C ${repo_dir} pull
     
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
-    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-    kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-keys.yaml
-    kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-keys.yaml
+    kubectl apply -f ${repo_dir}/config/cluster-info.yaml
+    kubectl apply -f ${repo_dir}/config/addons-deploy-keys.yaml
+    kubectl apply -f ${repo_dir}/config/cluster-deploy-keys.yaml
     kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
     kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
     kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
 
-    kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${mgmt_repo_dir}/eks-accounts/account-one-secret.yaml
-    kubeseal-aws-account.sh ${debug} --key-file ${mgmt_repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${mgmt_repo_dir}/eks-accounts/account-two-secret.yaml
-    git -C ${mgmt_repo_dir} add eks-accounts/account-one-secret.yaml
-    git -C ${mgmt_repo_dir} commit -a -m "eks accounts sealed secrets"
-    git -C ${mgmt_repo_dir} push
+    kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${repo_dir}/eks-accounts/account-one-secret.yaml
+    kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${repo_dir}/eks-accounts/account-two-secret.yaml
+    git -C ${repo_dir} add eks-accounts/account-one-secret.yaml
+    git -C ${repo_dir} commit -a -m "eks accounts sealed secrets"
+    git -C ${repo_dir} push
 
     kubectl apply -f ${base_dir}/addons/flux/self.yaml
-    kubectl apply -f ${mgmt_repo_dir}/clusters/bootstrap/bootstrap.yaml
+    kubectl apply -f ${repo_dir}/clusters/bootstrap/bootstrap.yaml
 
     kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
 
@@ -240,18 +240,18 @@ export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
 
 deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
-git -C ${mgmt_repo_dir} pull
+git -C ${repo_dir} pull
     
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
-kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-info.yaml
-kubectl apply -f ${mgmt_repo_dir}/manifests/addons-deploy-keys.yaml
-kubectl apply -f ${mgmt_repo_dir}/manifests/cluster-deploy-keys.yaml
+kubectl apply -f ${repo_dir}/config/cluster-info.yaml
+kubectl apply -f ${repo_dir}/config/addons-deploy-keys.yaml
+kubectl apply -f ${repo_dir}/config/cluster-deploy-keys.yaml
 kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
 kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
 kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
 
 kubectl apply -f ${base_dir}/addons/flux/self.yaml
-kubectl apply -f ${mgmt_repo_dir}/clusters/clusters.yaml
+kubectl apply -f ${repo_dir}/clusters/clusters.yaml
 
 export CREDS_DIR=$HOME/tenant01
 source $CREDS_DIR/account-one.sh

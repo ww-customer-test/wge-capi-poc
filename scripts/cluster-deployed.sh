@@ -1,30 +1,34 @@
 #!/bin/bash
 
-# Utility for intializing a cluster with flux resources
+# Utility for checking a cluster is deployed and wkp-components are installed.
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
 set -euo pipefail
-debug=""
+
 export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 function usage()
 {
-    echo "usage ${0} [--debug] --cluster-name <cluster-name> --git-url <git-url>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] --cluster-name <cluster-name> --git-url <url of cluster github repository>"
+    echo "optional use --kubeconfig option to specify kubeconfig file"
+    echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
     echo "<cluster-name> is the name of the cluster"
     echo "<git-url> is the url of the github repository to use"
-    echo "This script will deploy flux custom resources to a cluster"
+    echo "This script will verify the cluster is deployed with wkp-components"
 }
 
 function args() {
+  kubeconfig_path=${KUBECONFIG:-$HOME/.kube/config}
+  debug=""
   cluster_name=""
   git_url=""
-  debug=""
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
   while (( arg_index < arg_count )); do
     case "${arg_list[${arg_index}]}" in
+          "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
           "--cluster-name") (( arg_index+=1 ));cluster_name="${arg_list[${arg_index}]}";;
           "--git-url") (( arg_index+=1 ));git_url="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
@@ -33,7 +37,7 @@ function args() {
                "-?") usage; exit;;
         *) if [ "${arg_list[${arg_index}]:0:2}" == "--" ];then
                echo "invalid argument: ${arg_list[${arg_index}]}"
-               usage; exit 1
+               usage; exit
            fi;
            break;;
     esac
@@ -51,13 +55,8 @@ function args() {
 
 args "$@"
 
-repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
-git clone ${git_url} ${repo_dir}
+source $CREDS_DIR/account.sh
+export KUBECONFIG=${kubeconfig_path}
 
-kubectl apply -f ${repo_dir}/config/cluster-info.yaml
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
-kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
-kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
-kubectl apply -f ${repo_dir}/config
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-kubectl apply -f ${base_dir}/addons/flux/self.yaml
+status="$(kubectl -n flux-system get cm cluster-info -o json | jq -r '.data.status')"
+echo "$status"

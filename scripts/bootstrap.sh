@@ -152,84 +152,87 @@ export EXP_EKS_IAM=false
 export EXP_MACHINE_POOL=true
 export EXP_CLUSTER_RESOURCE_SET=true
 
+if [ ! "$(cluster-deployed.sh --debug --kubeconfig ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig --cluster-name y --git-url x)" == "wkp-deployed" ]; then
+    exit 0
+fi
+
 setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
-if [ ! -f ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig ]; then
-    # No management cluster kubeconfig, creating bootstrap cluster
-    echo ""
-    echo "Creating bootstrap cluster"
-    if [ -z "$(kind get clusters | grep wkp-${MGMT_CLUSTER_NAME}-bootstrap)" ] ; then
-        kind create cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
-    fi
-
-    echo "Deploy CAPI and provider"
-    if [ -z "$(kubectl  get ns capi-system)" ] ; then
-        clusterctl init -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
-    fi
-
-    echo ""
-    echo "Waiting for CAPI webhooks"
-    kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
-    kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=infrastructure-aws -n capi-webhook-system
-    kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=cluster-api -n capi-webhook-system
-    kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
-    kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
-
-    setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem --apply
-    
-    git -C ${repo_dir} pull
-
-    kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${repo_dir}/eks-accounts/account-one-secret.yaml
-    kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${repo_dir}/eks-accounts/account-two-secret.yaml
-    git -C ${repo_dir} add eks-accounts/account-one-secret.yaml
-    git -C ${repo_dir} commit -a -m "eks accounts sealed secrets"
-    git -C ${repo_dir} push
-
-    setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
-
-    kubectl apply -f ${repo_dir}/clusters/bootstrap/bootstrap.yaml
-
-    kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
-
-    echo ""
-    echo "Waiting for cluster to be ready"
-    kubectl ${namespace_setting} wait --for=condition=ready --timeout 1h cluster/$MGMT_CLUSTER_NAME
-
-    MP=$(cat ${MGMT_CLUSTER_DEF_FILE}| yq e 'select(.kind == "MachinePool")' -)
-    if [ "$MP" != "" ]; then
-        echo ""
-        echo "Waiting for the machine pool to be ready"
-        kubectl ${namespace_setting} wait --timeout=30m --for=condition=ready machinepool -l cluster.x-k8s.io/cluster-name=$MGMT_CLUSTER_NAME
-    fi
-
-    echo ""
-    echo "Setup CAPI in management cluster: $MGMT_CLUSTER_NAME"
-    kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/${MGMT_CLUSTER_NAME}.kubeconfig
-    if [ -z "$(kubectl --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig get ns capi-system 2>/dev/null)" ] ; then
-        clusterctl init  --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
-    fi
-    kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
-    kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=infrastructure-aws -n capi-webhook-system
-    kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=cluster-api -n capi-webhook-system
-    kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
-    kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
-
-    echo ""
-    echo "Pivot into the new management cluster"
-    # NOTE: we get the secret again as the token is short lived
-    kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/${MGMT_CLUSTER_NAME}.kubeconfig
-    clusterctl move --to-kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig
-
-    echo ""
-    echo "Get user kubeconfig"
-    kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
-
-    if [ "$KEEP_KIND" == "false" ]; then
-        echo ""
-        echo "Delete bootstrap cluster"
-        kind delete cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
-    fi
+# No management cluster kubeconfig, creating bootstrap cluster
+echo ""
+echo "Creating bootstrap cluster"
+if [ -z "$(kind get clusters | grep wkp-${MGMT_CLUSTER_NAME}-bootstrap)" ] ; then
+    kind create cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
 fi
+
+echo "Deploy CAPI and provider"
+if [ -z "$(kubectl  get ns capi-system)" ] ; then
+    clusterctl init -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
+fi
+
+echo ""
+echo "Waiting for CAPI webhooks"
+kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
+kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=infrastructure-aws -n capi-webhook-system
+kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=cluster-api -n capi-webhook-system
+kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
+kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
+
+setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem --apply
+
+git -C ${repo_dir} pull
+
+kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${repo_dir}/eks-accounts/account-one-secret.yaml
+kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${repo_dir}/eks-accounts/account-two-secret.yaml
+git -C ${repo_dir} add eks-accounts/account-one-secret.yaml
+git -C ${repo_dir} commit -a -m "eks accounts sealed secrets"
+git -C ${repo_dir} push
+
+setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
+
+kubectl apply -f ${repo_dir}/clusters/bootstrap/bootstrap.yaml
+
+kubectl -n flux-system wait --for=condition=ready --timeout 5m kustomization.kustomize.toolkit.fluxcd.io/${MGMT_CLUSTER_NAME}
+
+echo ""
+echo "Waiting for cluster to be ready"
+kubectl ${namespace_setting} wait --for=condition=ready --timeout 1h cluster/$MGMT_CLUSTER_NAME
+
+MP=$(cat ${MGMT_CLUSTER_DEF_FILE}| yq e 'select(.kind == "MachinePool")' -)
+if [ "$MP" != "" ]; then
+    echo ""
+    echo "Waiting for the machine pool to be ready"
+    kubectl ${namespace_setting} wait --timeout=30m --for=condition=ready machinepool -l cluster.x-k8s.io/cluster-name=$MGMT_CLUSTER_NAME
+fi
+
+echo ""
+echo "Setup CAPI in management cluster: $MGMT_CLUSTER_NAME"
+kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/${MGMT_CLUSTER_NAME}.kubeconfig
+if [ -z "$(kubectl --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig get ns capi-system 2>/dev/null)" ] ; then
+    clusterctl init  --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
+fi
+kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
+kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=infrastructure-aws -n capi-webhook-system
+kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=cluster-api -n capi-webhook-system
+kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
+kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
+
+echo ""
+echo "Pivot into the new management cluster"
+# NOTE: we get the secret again as the token is short lived
+kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/${MGMT_CLUSTER_NAME}.kubeconfig
+clusterctl move --to-kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig
+
+echo ""
+echo "Get user kubeconfig"
+kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-user-kubeconfig -o jsonpath={.data.value} | base64 --decode > ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
+
+if [ "$KEEP_KIND" == "false" ]; then
+    echo ""
+    echo "Delete bootstrap cluster"
+    kind delete cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
+fi
+
 export KUBECONFIG=${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig
 
 setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
@@ -242,9 +245,5 @@ setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUS
 
 kubectl apply -f ${repo_dir}/clusters/clusters.yaml
 
-export CREDS_DIR=$HOME/tenant01
-tenants.sh --debug --cluster-name tenant01 --git-url git@github.com:ww-customer-test/tenant01-cluster
 
-export CREDS_DIR=$HOME/tenant02
-tenants.sh --debug --cluster-name tenant02 --git-url git@github.com:ww-customer-test/tenant02-cluster
 

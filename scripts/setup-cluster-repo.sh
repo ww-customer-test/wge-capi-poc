@@ -67,6 +67,7 @@ metadata:
 data:
   cluster_repo_url: $(echo -n "${git_url}" | sed s#:#/#)
   cluster_name: ${cluster_name}
+  status: "wkp-deployed"
 EOF
 
 if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then

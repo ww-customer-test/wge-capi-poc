@@ -145,3 +145,25 @@ if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clea
   git -C ${repo_dir} commit -a -m "add manifests dummy.yaml"
   git -C ${repo_dir} push
 fi
+
+cat > ${repo_dir}/config/cluster-config.yaml << EOF
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: cluster-config
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: cluster-config
+  url: ssh://$(echo -n "${git_url}" | sed s#:#/#)
+EOF
+
+if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
+  git -C ${repo_dir} add manifests/dummy.yaml
+  git -C ${repo_dir} commit -a -m "add cluster-config gitrepository custom resource"
+  git -C ${repo_dir} push
+fi

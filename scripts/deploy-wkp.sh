@@ -49,13 +49,11 @@ function args() {
 
 args "$@"
 
-set +e
-wkp-installed.sh --wait 1
-if [[ "$?" == "0" ]] ; then
+if [[ "$(wkp-installed.sh ${debug} --wait 1)" == "0" ]] ; then
     echo "wkp already installed on cluster"
-    exit 0
+    restart-kubeseal.sh ${debug}
+    exit
 fi
-set -e
 
 script_dir=$(dirname ${BASH_SOURCE[0]})
 repo_dir=$(mktemp -d -t wkp-${cluster_name}-XXXXXXXXXX)

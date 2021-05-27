@@ -7,7 +7,7 @@ metadata:
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: AWSClusterStaticIdentity
 metadata:
-  name: "account-two"
+  name: "account-two-account"
 spec:
   secretRef:
     name: account-creds

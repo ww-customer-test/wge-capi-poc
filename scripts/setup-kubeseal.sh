@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Utility for setting up kubeseal
+# Utility for setting up kubeseal secret
 # Version: 1.0
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
@@ -8,10 +8,10 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--privatekey-file <privatekey-file>] [--pubkey-file <pubkey-file>] [--apply]"
+    echo "usage ${0} [--debug] [--privatekey-file <privatekey-file>] [--pubkey-file <pubkey-file>] "
     echo "<privatekey-file> is the path of private key file, defaults to $HOME/sealed-secrets-key"
     echo "<pubkey-file> is the path to store the public key file, defaults to $HOME/pub-sealed-secrets.pem"
-    echo "This script will setup kubeseal on a cluster"
+    echo "This script will setup kubeseal secret on a cluster"
 }
 
 function args() {
@@ -60,13 +60,4 @@ metadata:
 type: kubernetes.io/tls
 EOF
 
-if [ -n "${apply}" ] ; then
-  kubectl apply -f ${base_dir}/addons/sealed-secrets
-fi
-
-#if [ ! -f "${pubkey_file}" ] ; then
-#  kubeseal --fetch-cert \
-#  --controller-name=sealed-secrets \
-#  --controller-namespace=kube-system \
-#  > ${pubkey_file}
-#fi
+restart-kubeseal.sh ${debug}

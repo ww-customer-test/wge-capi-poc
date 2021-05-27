@@ -152,9 +152,11 @@ export EXP_EKS_IAM=false
 export EXP_MACHINE_POOL=true
 export EXP_CLUSTER_RESOURCE_SET=true
 
-if [ ! "$(cluster-deployed.sh --debug --kubeconfig ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig --cluster-name y --git-url x)" == "wkp-deployed" ]; then
+if [ "$(cluster-deployed.sh --debug --kubeconfig ${CREDS_DIR}/${MGMT_CLUSTER_NAME}.kubeconfig --cluster-name y --git-url x)" == "deployed" ]; then
     exit 0
 fi
+
+unset KUBECONFIG
 
 setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
@@ -178,17 +180,16 @@ kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider
 kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=bootstrap-kubeadm -n capi-webhook-system
 kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-kubeadm -n capi-webhook-system
 
-setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem --apply
-
 git -C ${repo_dir} pull
+
+setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
+
 
 kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${repo_dir}/eks-accounts/account-one-secret.yaml
 kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${repo_dir}/eks-accounts/account-two-secret.yaml
 git -C ${repo_dir} add eks-accounts/account-one-secret.yaml
 git -C ${repo_dir} commit -a -m "eks accounts sealed secrets"
 git -C ${repo_dir} push
-
-setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
 kubectl apply -f ${repo_dir}/clusters/bootstrap/bootstrap.yaml
 

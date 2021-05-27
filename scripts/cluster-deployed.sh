@@ -58,5 +58,5 @@ args "$@"
 source $CREDS_DIR/account.sh
 export KUBECONFIG=${kubeconfig_path}
 
-status="$(kubectl -n flux-system get cm cluster-info -o json | jq -r '.data.status')"
+status="$(kubectl -n flux-system get cm cluster-info -o json | jq -r '.data.wkp_status')"
 echo "$status"

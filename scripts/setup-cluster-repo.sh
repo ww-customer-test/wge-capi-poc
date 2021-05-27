@@ -67,12 +67,12 @@ metadata:
 data:
   cluster_repo_url: $(echo -n "${git_url}" | sed s#:#/#)
   cluster_name: ${cluster_name}
-  status: "wkp-deployed"
+  wkp_status: "deployed"
 EOF
 
 if [ -z "`git -C ${repo_dir} status | grep 'nothing to commit, working tree clean'`" ] ; then
   git -C ${repo_dir} add config
-  git -C ${repo_dir} commit -a -m "add cluster config to manifest files"
+  git -C ${repo_dir} commit -a -m "add config files"
   git -C ${repo_dir} push
 fi
 

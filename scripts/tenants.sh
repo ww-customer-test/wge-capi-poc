@@ -10,7 +10,7 @@ export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 function usage()
 {
-    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] --cluster-name <cluster-name> --git-url <url of tenant cluster github repository>"
+    echo "usage ${0} [--debug] [--kubeconfig <kubeconfig-file>] [--creds-dir <credential directory>] --cluster-name <cluster-name> --git-url <url of tenant cluster github repository>"
     echo "optional use --kubeconfig option to specify kubeconfig file"
     echo "defaults to KUBECONFIG environmental variable value or $HOME/.kube/config if not set"
     echo "<cluster-name> is the name of the cluster"
@@ -23,6 +23,7 @@ function args() {
   debug=""
   cluster_name=""
   git_url=""
+  CREDS_DIR=${CREDS_DIR:-$HOME}
   arg_list=( "$@" )
   arg_count=${#arg_list[@]}
   arg_index=0
@@ -31,6 +32,7 @@ function args() {
           "--kubeconfig") (( arg_index+=1 ));kubeconfig_path="${arg_list[${arg_index}]}";;
           "--cluster-name") (( arg_index+=1 ));cluster_name="${arg_list[${arg_index}]}";;
           "--git-url") (( arg_index+=1 ));git_url="${arg_list[${arg_index}]}";;
+          "--creds-dir") (( arg_index+=1 ));CREDS_DIR="${arg_list[${arg_index}]}";;
           "--debug") set -x; debug="--debug";;
                "-h") usage; exit;;
            "--help") usage; exit;;
@@ -66,6 +68,10 @@ export KUBECONFIG=${CREDS_DIR}/${cluster_name}.kubeconfig
 
 setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${cluster_name} --git-url ${git_url}
 
-deploy-wkp.sh ${debug} --cluster-name ${cluster_name} --git-url git@github.com:ww-customer-test/wkp-${cluster_name}.git
+repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
+git clone ${git_url} ${repo_dir}
+setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
 
-setup-flux.sh ${debug} --cluster-name ${cluster_name} --git-url ${git_url}
+setup-flux.sh ${debug} --cluster-name ${cluster_name} --git-url ${git_url} --kubeseal
+
+deploy-wkp.sh ${debug} --cluster-name ${cluster_name} --git-url git@github.com:ww-customer-test/wkp-${cluster_name}.git

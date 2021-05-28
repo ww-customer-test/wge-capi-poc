@@ -8,7 +8,7 @@ set -euo pipefail
 
 function usage()
 {
-    echo "usage ${0} [--debug] --cluster-name <cluster-name> --git-url <git-url>"
+    echo "usage ${0} [--debug] [--reinstall] --cluster-name <cluster-name> --git-url <git-url>"
     echo "<cluster-name> is the name of the cluster"
     echo "<git-url> is the url of the github repository to use for WKP install"
     echo "This script will setup wkp on a cluster, use <git-url> to specify the directory the repository to use"
@@ -61,19 +61,23 @@ git clone ${git_url} ${repo_dir}
 pushd ${repo_dir}
 
 if [ -z "$(git remote | grep origin)" ] ; then
-  git remote add origin ${git_URL}
+  git remote add origin ${git_url}
 fi
 git branch --set-upstream-to=origin/master master
 git pull
 
 wkp-setup.sh ${debug}
 
+if [ -z "$(git remote | grep origin)" ] ; then
+  git remote add origin ${git_url}
+fi
+git branch --set-upstream-to=origin/master master
+
 if [ -e cluster/platform/gitops-secrets.yaml ] ; then
   echo "gitops secret yaml already present, reseting"
   rm -rf * .flux.yaml .gitignore
   git reset --hard $(git log --pretty=oneline --pretty=format:"%H %ae %s" | grep "support@weave.works Initial commit" | awk '{print $1}')
   git push -f
-  remove-wkp-kubeseal.sh ${debug}
   remove-wkp-flux1.sh ${debug}
   wkp-setup.sh ${debug}
 fi

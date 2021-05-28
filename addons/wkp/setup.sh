@@ -459,16 +459,22 @@ else # unknown
 fi
 
 # Sealed secrets installation
-kubectl --namespace="kube-system" \
-    create secret tls sealed-secrets-key \
-    --cert="${SEALED_SECRETS_CERT}" \
-    --key="${SEALED_SECRETS_KEY}"
-kubectl --namespace="kube-system" \
-    label secret sealed-secrets-key \
-    sealedsecrets.bitnami.com/sealed-secrets-key=active \
-    --overwrite=true
-kubectl apply \
-    --filename "${SCRIPT_DIR}/../cluster/manifests/sealed-secrets-controller.yaml" &> /dev/null
+#kubectl --namespace="kube-system" \
+#    create secret tls sealed-secrets-key \
+#    --cert="${SEALED_SECRETS_CERT}" \
+#    --key="${SEALED_SECRETS_KEY}"
+#kubectl --namespace="kube-system" \
+#    label secret sealed-secrets-key \
+#    sealedsecrets.bitnami.com/sealed-secrets-key=active \
+#    --overwrite=true
+#kubectl apply \
+#    --filename "${SCRIPT_DIR}/../cluster/manifests/sealed-secrets-controller.yaml" &> /dev/null
+rm ${SCRIPT_DIR}/../cluster/manifests/sealed-secrets-controller.yaml
+if [ -z "`git status | grep 'nothing to commit, working tree clean'`" ] ; then
+  git add -A
+  git commit -a -m "remove sealed secrets"
+  git push
+fi
 # Make sure the CRD is present before waiting on its condition
 echo -n 'Waiting for sealed secret CRD installation...'
 crd_tries=15

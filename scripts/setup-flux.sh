@@ -68,6 +68,7 @@ if [ -n "$kubeseal" ]; then
     echo "1"
     exit 1
   fi
+  kubectl apply -f ${base_dir}/addons/sealed-secrets/sealed-secrets-flux.yaml
 fi
 kubectl wait --for condition=established crd/sealedsecrets.bitnami.com
 kubectl apply -f ${repo_dir}/config

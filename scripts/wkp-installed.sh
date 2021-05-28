@@ -48,8 +48,4 @@ if [ "$(wait-for-deployment.sh ${debug} --wait $wait --namespace wkp-flux --depl
   exit
 fi
 
-if [ "$(wait-for-deployment.sh ${debug} --wait $wait --namespace kube-system --deployment sealed-secrets-controller)" == "1" ]; then
-  echo "1"
-  exit
-fi
 echo "0"

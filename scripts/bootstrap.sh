@@ -240,7 +240,7 @@ setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pub
 
 git -C ${repo_dir} pull
 
-setup-flux.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
+setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
 kubectl apply -f ${repo_dir}/clusters/clusters.yaml
 

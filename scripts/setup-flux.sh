@@ -72,8 +72,7 @@ if [ -n "$kubeseal" ]; then
 fi
 kubectl wait --for condition=established crd/sealedsecrets.bitnami.com
 kubectl apply -f ${repo_dir}/config
-#kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
-kubectl apply -f ${base_dir}/addons/flux/self.yaml
+kubectl apply -f ${base_dir}/addons/sync/self.yaml
 
 if [ -n "$(kubectl get pod -n flux-system | grep source-controller | awk '{print $1}')" ]; then
   controller="$(kubectl get pod -n flux-system | grep source-controller | awk '{print $1}')"

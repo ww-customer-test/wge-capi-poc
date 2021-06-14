@@ -5,6 +5,7 @@
 # Author: Paul Carlton (mailto:paul.carlton@weave.works)
 
 set -euo pipefail
+export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
 
 function usage()
 {
@@ -43,6 +44,10 @@ function args() {
 
 args "$@"
 
+export GITHUB_ORG=${GITHUB_ORG:-$(git config -f ~/.gitconfig --get user.name)}
+export GITHUB_REPO=${GITHUB_REPO:-$(basename $base_dir)}
+
+pushd $base_dir
 flux check --pre
 flux bootstrap github \
   --kubeconfig=${kubeconfig_path} \
@@ -53,3 +58,5 @@ flux bootstrap github \
   --token-auth
 
 git pull
+
+popd

@@ -57,7 +57,7 @@ args "$@"
 repo_dir=$(mktemp -d -t ${cluster_name}-XXXXXXXXXX)
 git clone ${git_url} ${repo_dir}
 
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
+#kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-components.yaml
 kubectl wait --for condition=established crd/gitrepositories.source.toolkit.fluxcd.io
 kubectl wait --for condition=established crd/kustomizations.kustomize.toolkit.fluxcd.io
 setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pubkey-file ${repo_dir}/pub-sealed-secrets.pem
@@ -72,7 +72,7 @@ if [ -n "$kubeseal" ]; then
 fi
 kubectl wait --for condition=established crd/sealedsecrets.bitnami.com
 kubectl apply -f ${repo_dir}/config
-kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
+#kubectl apply -f ${base_dir}/addons/flux/flux-system/gotk-sync.yaml
 kubectl apply -f ${base_dir}/addons/flux/self.yaml
 
 if [ -n "$(kubectl get pod -n flux-system | grep source-controller | awk '{print $1}')" ]; then

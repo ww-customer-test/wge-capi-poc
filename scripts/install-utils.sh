@@ -35,8 +35,8 @@ function args() {
 
 args "$@"
 
-export CLUSTER_API_VERSION=0.3.16
-export CAPA_VERSION=0.6.5
+export CLUSTER_API_VERSION=0.3.19
+export CAPA_VERSION=0.6.6
 export YQ_VERSION=v4.6.1
 
 curl -s -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64 && \
@@ -55,7 +55,7 @@ curl -s -L  https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases
 chmod +x ./clusterawsadm && \
 sudo mv ./clusterawsadm /usr/local/bin
 
-brew install flux
+brew upgrade flux
 
 sudo curl -s -L  https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq && \
 sudo chmod +x /usr/local/bin/yq
@@ -64,4 +64,4 @@ curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.19
 chmod +x ./aws-iam-authenticator
 sudo mv aws-iam-authenticator /usr/local/bin
 
-brew install kubeseal
+brew upgrade kubeseal

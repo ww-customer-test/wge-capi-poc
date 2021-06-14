@@ -182,6 +182,8 @@ kubectl wait --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider
 
 git -C ${repo_dir} pull
 
+FLUX_VERSION=$(flux --version | awk '{print $3}')
+deploy-flux.sh --debug addons/flux-v${FLUX_VERSION}
 setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
 
@@ -240,6 +242,8 @@ setup-kubeseal.sh ${debug} --privatekey-file $CREDS_DIR/sealed-secrets-key --pub
 
 git -C ${repo_dir} pull
 
+FLUX_VERSION=$(flux --version | awk '{print $3}')
+deploy-flux.sh --debug addons/flux-v${FLUX_VERSION}
 setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
 kubectl apply -f ${repo_dir}/clusters/clusters.yaml

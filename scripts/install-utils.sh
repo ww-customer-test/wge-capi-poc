@@ -35,8 +35,8 @@ function args() {
 
 args "$@"
 
-export CLUSTER_API_VERSION=0.3.19
-export CAPA_VERSION=0.6.6
+export CLUSTER_API_VERSION=0.4.2
+export CAPA_VERSION=0.7.0
 export YQ_VERSION=v4.6.1
 
 curl -s -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64 && \

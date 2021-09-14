@@ -2,17 +2,17 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: "account-one"
+  name: "account-general"
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
 kind: AWSClusterStaticIdentity
 metadata:
-  name: "account-one-account"
+  name: "account-general-account"
 spec:
   secretRef:
     name: account-creds
-    namespace: account-one
+    namespace: account-general
   allowedNamespaces:
     selector:
       matchLabels:
-        cluster.x-k8s.io/ns: "account-one"
+        cluster.x-k8s.io/ns: "account-general"

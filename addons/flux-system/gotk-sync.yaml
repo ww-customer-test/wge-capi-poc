@@ -10,7 +10,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: https://github.com/ww-customer-test/wkp-capi-poc.git
+  url: https://github.com/ww-customer-test/wge-capi-poc.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
 kind: Kustomization
@@ -19,7 +19,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./addons/flux-v0.13.4
+  path: ./addons/flux-system
   prune: true
   sourceRef:
     kind: GitRepository

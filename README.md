@@ -1,6 +1,6 @@
-# WKP CAPI Platform Cluster Management
+# WGE CAPI Platform Cluster Management
 
-## WKP Preview Feature Prerequisites
+## Prerequisites
 
 * Linux or Macintosh machine to run the demo.
 * Docker installed and functioning.
@@ -17,7 +17,7 @@
 
 ## Repository Setup
 
-* Copy [this repo](https://github.com/wkp-capi-demo/paulcarlton-platform-cluster-management)
+* Copy [this repo](https://github.com/ww-customer-test/wge-capi-poc)
 
 ## Install client software
 
@@ -38,8 +38,8 @@ export AWS_ACCESS_KEY_ID=mykey
 export AWS_SECRET_ACCESS_KEY=mysecret
 export AWS_REGION=<region to use>
 
-export GITHUB_ORG=wkp-capi-demo # or your repository org
-export GITHUB_REPO=<repository name>
+export GITHUB_ORG=ww-customer-test # or your repository org
+export GITHUB_REPO=wge-capi-poc
 ```
 
 ## Create the CAPI AWS IAM Artefacts

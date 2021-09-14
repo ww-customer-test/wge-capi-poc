@@ -1,7 +1,7 @@
 #!/bin/bash
 INFRA_PROVIDERS=aws
-BOOTSTRAP_PROVIDERS=kubeadm:v0.3.12,aws-eks
-CONTROLPLANE_PROVIDERS=kubeadm:v0.3.12,aws-eks
+BOOTSTRAP_PROVIDERS=kubeadm:v0.4.2,aws-eks
+CONTROLPLANE_PROVIDERS=kubeadm:v0.4.2,aws-eks
 KEEP_KIND=false
 debug=""
 export base_dir="$(dirname $(dirname $(realpath ${BASH_SOURCE[0]})))"
@@ -117,12 +117,12 @@ fi
 export CREDS_DIR=${CREDS_DIR:-$HOME}
 
 if [ -z ${MGMT_CLUSTER_REPO_URL} ]; then
-    echo "Management Cluster Repository URL is required, specify using --${MGMT_CLUSTER_NAME}-cluster-repo-url=<git-repo-url>"
+    echo "Management Cluster Repository URL is required, specify using --mgmt-cluster-repo-url=<git-repo-url>"
     exit 1
 fi
 
 if [ -z ${MGMT_CLUSTER_NAME} ]; then
-    echo "Management Cluster Name is required, specify using --${MGMT_CLUSTER_NAME}-cluster-name=<cluster name>"
+    echo "Management Cluster Name is required, specify using --mgmt-cluster-name=<cluster name>"
     exit 1
 fi
 
@@ -148,7 +148,7 @@ export GITHUB_TOKEN
 echo ""
 echo "Cluster API Initialize"
 export EXP_EKS=true
-export EXP_EKS_IAM=false
+export EXP_EKS_IAM=true
 export EXP_MACHINE_POOL=true
 export EXP_CLUSTER_RESOURCE_SET=true
 
@@ -164,12 +164,13 @@ setup-cluster-repo.sh ${debug} --keys-dir $CREDS_DIR --cluster-name ${MGMT_CLUST
 echo ""
 echo "Creating bootstrap cluster"
 if [ -z "$(kind get clusters | grep wkp-${MGMT_CLUSTER_NAME}-bootstrap)" ] ; then
-    kind create cluster --name=wkp-${MGMT_CLUSTER_NAME}-bootstrap
+    kind create cluster --name=${MGMT_CLUSTER_NAME}-bootstrap
 fi
 
 echo "Deploy CAPI and provider"
 if [ -z "$(kubectl  get ns capi-system)" ] ; then
-    clusterctl init -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
+    export CAPA_EKS=false
+    clusterctl init -i $INFRA_PROVIDERS
 fi
 
 echo ""
@@ -185,7 +186,6 @@ git -C ${repo_dir} pull
 FLUX_VERSION=$(flux --version | awk '{print $3}')
 deploy-flux.sh --debug addons/flux-v${FLUX_VERSION}
 setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
-
 
 kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-one ${repo_dir}/eks-accounts/account-one-secret.yaml
 kubeseal-aws-account.sh ${debug} --key-file ${repo_dir}/pub-sealed-secrets.pem --aws-account-name account-two ${repo_dir}/eks-accounts/account-two-secret.yaml
@@ -212,7 +212,7 @@ echo ""
 echo "Setup CAPI in management cluster: $MGMT_CLUSTER_NAME"
 kubectl ${namespace_setting} get secret $MGMT_CLUSTER_NAME-kubeconfig -o jsonpath={.data.value} | base64 --decode > ~/${MGMT_CLUSTER_NAME}.kubeconfig
 if [ -z "$(kubectl --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig get ns capi-system 2>/dev/null)" ] ; then
-    clusterctl init  --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig -i $INFRA_PROVIDERS -c $CONTROLPLANE_PROVIDERS -b $BOOTSTRAP_PROVIDERS --core cluster-api:v0.3.12
+    clusterctl init  --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig -i $INFRA_PROVIDERS --core cluster-api:v0.4.2
 fi
 kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=control-plane-eks -n capi-webhook-system
 kubectl wait --kubeconfig ~/${MGMT_CLUSTER_NAME}.kubeconfig --for=condition=ready --timeout=2m pod -l cluster.x-k8s.io/provider=infrastructure-aws -n capi-webhook-system
@@ -247,8 +247,6 @@ deploy-flux.sh --debug addons/flux-v${FLUX_VERSION}
 setup-flux.sh ${debug} --kubeseal --cluster-name ${MGMT_CLUSTER_NAME} --git-url ${MGMT_CLUSTER_REPO_URL}
 
 kubectl apply -f ${repo_dir}/clusters/clusters.yaml
-
-deploy-wkp.sh ${debug} --cluster-name ${MGMT_CLUSTER_NAME} --git-url git@github.com:ww-customer-test/wkp-mgmt01.git
 
 
 
